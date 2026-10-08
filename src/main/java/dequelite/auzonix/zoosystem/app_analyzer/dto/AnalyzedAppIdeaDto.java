@@ -9,9 +9,4 @@ public record AnalyzedAppIdeaDto(
         String applicationGoal,
         List<UserGoalsDto> userGoals
 ) {
-
-    private record UserGoalsDto (
-            String goalTask,
-            String goalText
-    ) {}
 }

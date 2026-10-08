@@ -14,9 +14,6 @@ public class AnalyzeAppIdeaService {
     private final AnalyzeAppIdeaPrompt analyzeAppIdeaPrompt;
 
     public AnalyzedAppIdeaDto analyze(String appDocument) {
-        AnalyzedAppIdeaDto result = this.analyzeAppIdeaPrompt.analyze(appDocument);
-
-
-        return result;
+        return this.analyzeAppIdeaPrompt.analyze(appDocument);
     }
 }
