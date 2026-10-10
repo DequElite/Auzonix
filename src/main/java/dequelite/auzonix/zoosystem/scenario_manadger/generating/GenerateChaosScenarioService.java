@@ -23,6 +23,18 @@ public class GenerateChaosScenarioService {
             List<AnalyzedAppTasksDto> appTasksAnalysis,
             AuTypeDto auType
     ) {
-        //todo: дописать функционал
+        AnalyzedAppPageDto mainAnalyzedPage = analyzedPagesDocuments.isEmpty()
+                ? null
+                : analyzedPagesDocuments.get(0);
+        if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
+
+        return this.generateChaosScenarioPrompt.analyze(
+                appIdeaAnalysis,
+                appTasksAnalysis,
+                mainAnalyzedPage,
+                auType.id(),
+                auType.name(),
+                auType.domainKnowledge()
+        );
     }
 }
