@@ -1,7 +1,9 @@
 package dequelite.auzonix.zoosystem.au_manadger.au_types;
 
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
+import org.springframework.stereotype.Component;
 
+@Component
 public class SecondAuLevelType implements IAuType {
     @Override
     public AuTypeDto getAuType(){
