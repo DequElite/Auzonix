@@ -1,9 +1,11 @@
 package dequelite.auzonix.zoosystem.app_analyzer.analyzers;
 
 import dequelite.auzonix.zoosystem.ai.AnalyzeAppPagePrompt;
+import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedPagesDto;
+import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,17 +16,18 @@ import java.util.List;
 public class AnalyzeUserExperienceService {
     private final AnalyzeAppPagePrompt analyzeAppPagePrompt;
 
-    public List<AnalyzedAppPageDto> analyze(
+    public AnalyzedPagesDto analyze(
             List<String> pagesDocuments,
             AnalyzedAppIdeaDto appIdeaAnalysis,
-            List<AnalyzedAppTasksDto> appTasksAnalysis
+            AnalyzedTasksDto appTasksAnalysis
     ) {
-        return pagesDocuments.stream()
+        List<AnalyzedAppPageDto> analyzedAppPages = pagesDocuments.stream()
                 .map(p -> this.analyzeAppPagePrompt.analyze(
                         p,
                         appIdeaAnalysis,
-                        appTasksAnalysis
+                        appTasksAnalysis.tasks()
                 ))
                 .toList();
+        return new AnalyzedPagesDto(analyzedAppPages);
     }
 }

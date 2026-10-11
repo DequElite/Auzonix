@@ -17,9 +17,9 @@ langchain4j:
       timeout: 10m
       log-requests: true
       log-responses: true
-      max-tokens: 4096
-      num-predict: 4096
-      format: json
+      max-tokens: 8192
+      num-predict: 8192
+      response-format: json
 
 
 logging:

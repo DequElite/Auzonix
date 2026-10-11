@@ -2,7 +2,7 @@ package dequelite.auzonix.zoosystem.ai;
 
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -78,7 +78,7 @@ public interface GenerateChaosScenarioPrompt {
             """)
     ChaosScenarioDto analyze(
             @V("appIdeaAnalysisJson") AnalyzedAppIdeaDto appIdeaAnalysisJson,
-            @V("appTasksAnalysisJson") List<AnalyzedAppTasksDto> appTasksAnalysisJson,
+            @V("appTasksAnalysisJson") List<AnalyzedAppTaskDto> appTasksAnalysisJson,
             @V("pageAnalysisJson") AnalyzedAppPageDto pageAnalysisJson,
             @V("auTypeId") String auTypeId,
             @V("auTypeName") String auTypeName,

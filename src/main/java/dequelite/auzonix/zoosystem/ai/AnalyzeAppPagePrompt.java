@@ -1,7 +1,7 @@
 package dequelite.auzonix.zoosystem.ai;
 
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -98,5 +98,5 @@ public interface AnalyzeAppPagePrompt {
     AnalyzedAppPageDto analyze(
             @V("pageDocument") String pageDocument,
             @V("appIdeaAnalysis") AnalyzedAppIdeaDto appIdeaAnalysis,
-            @V("appTasksAnalysis") List<AnalyzedAppTasksDto> appTasksAnalysis);
+            @V("appTasksAnalysis") List<AnalyzedAppTaskDto> appTasksAnalysis);
 }

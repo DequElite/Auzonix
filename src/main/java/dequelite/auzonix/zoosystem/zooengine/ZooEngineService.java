@@ -3,9 +3,11 @@ package dequelite.auzonix.zoosystem.zooengine;
 import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeAppIdeaService;
 import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeAppTasksService;
 import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeUserExperienceService;
+import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedPagesDto;
+import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestService;
@@ -42,18 +44,18 @@ public class ZooEngineService {
         log.debug("//AnalyzedAppIdeaDto: {}", analyzedAppIdeaDto.toString());
 
         log.debug("//Launching second step...");
-        List<AnalyzedAppTasksDto> analyzedAppTasksDto = this.analyzeAppTasksService.analyze(
+        AnalyzedTasksDto analyzedAppTasksDto = this.analyzeAppTasksService.analyze(
                 appDocument, analyzedAppIdeaDto
         );
         log.debug("//Second step completed:");
-        log.debug("//AnalyzedAppTasksDto: {}", analyzedAppTasksDto);
+        log.debug("//AnalyzedAppTasksDto: {}", analyzedAppTasksDto.toString());
 
         log.debug("//Launching third step...");
-        List<AnalyzedAppPageDto> analyzedAppPageDtos = this.analyzeUserExperienceService.analyze(
+        AnalyzedPagesDto analyzedAppPageDtos = this.analyzeUserExperienceService.analyze(
                 pagesDocuments, analyzedAppIdeaDto, analyzedAppTasksDto
         );
         log.debug("//Third step completed:");
-        log.debug("//AnalyzedAppPageDto: {}", analyzedAppPageDtos);
+        log.debug("//AnalyzedAppPageDto: {}", analyzedAppPageDtos.toString());
 
         log.debug("//Launching fourth step...");
         AuTypeDto auType = this.secondAuLevelType.getAuType();

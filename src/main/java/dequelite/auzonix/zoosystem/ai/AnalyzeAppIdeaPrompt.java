@@ -42,18 +42,18 @@ public interface AnalyzeAppIdeaPrompt {
             - `goalText` — a clear description of what the user wants to accomplish.
             
             JSON Structure:
-            { 
-            "applicationType": "string", 
-            "coreIdea": "string", 
-            "mainPurpose": "string", 
-            "applicationGoal": "string", 
-            "userGoals": [ 
-            	{ 
-            		"goalTask": "string", 
-            		"goalText": "string" 
-            	} 
-            ] 
-            }
+            {
+            "applicationType": "string",
+            "coreIdea": "string",
+            "mainPurpose": "string",
+            "applicationGoal": "string",
+            "userGoals": [
+            	{
+            		"goalTask": "string",
+            		"goalText": "string"
+            	}
+            ]
+            
             """)
     AnalyzedAppIdeaDto analyze(@V("appDocument") String appDocument);
 }

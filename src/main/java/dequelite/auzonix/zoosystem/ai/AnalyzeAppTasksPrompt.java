@@ -1,7 +1,8 @@
 package dequelite.auzonix.zoosystem.ai;
 
+import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.service.spring.AiService;
@@ -71,5 +72,5 @@ public interface AnalyzeAppTasksPrompt {
             ]
             }
             """)
-    List<AnalyzedAppTasksDto> analyze(@V("appDocument") String appDocument, @V("appIdeaAnalysis") AnalyzedAppIdeaDto appIdeaAnalysis);
+    AnalyzedTasksDto analyze(@V("appDocument") String appDocument, @V("appIdeaAnalysis") AnalyzedAppIdeaDto appIdeaAnalysis);
 }
