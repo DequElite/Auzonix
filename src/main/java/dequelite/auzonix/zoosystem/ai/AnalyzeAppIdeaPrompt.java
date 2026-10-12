@@ -28,6 +28,13 @@ public interface AnalyzeAppIdeaPrompt {
             {{appDocument}}
             
             Output:
+            Strict output rules:
+            - Return exactly one complete, valid JSON object.
+            - Do not include Markdown, code fences, comments, or explanations outside the JSON.
+            - Every opening `{` and `[` must have a matching closing `}` and `]`.
+            - Do not stop generating until the entire JSON object is closed.
+            - All fields must match the provided JSON structure.
+            
             Return the analysis as valid JSON.
             
             The response must contain the following fields:
@@ -53,7 +60,7 @@ public interface AnalyzeAppIdeaPrompt {
             		"goalText": "string"
             	}
             ]
-            
+            }
             """)
     AnalyzedAppIdeaDto analyze(@V("appDocument") String appDocument);
 }

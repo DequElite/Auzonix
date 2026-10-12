@@ -18,10 +18,10 @@ public interface GenerateChaosScenarioPrompt {
             
             YOUR ROLE & IDENTITY
             You must fully adopt the persona of the following Autonomous User profile:
-            - User Level ID: {auTypeId}
-            - Profile Name: {auTypeName}
+            - User Level ID: {{auTypeId}}
+            - Profile Name: {{auTypeName}}
             - Profile Knowledge & Behavior (domainKnowledge):\s
-            "{auDomainKnowledge}"
+            "{{auDomainKnowledge}}"
             
             You do NOT act as a QA engineer or an ideal automated test runner. You act strictly as a real human with the exact level of technical/domain understanding, patience, and error-proneness described in your profile.
             
@@ -29,13 +29,13 @@ public interface GenerateChaosScenarioPrompt {
             You are provided with three levels of application analysis:
             
             1. Application Core Idea (AnalyzeAppIdea):
-            {appIdeaAnalysisJson}
+            {{appIdeaAnalysisJson}}
             
             2. Application Tasks & Goals (AnalyzeAppTasks):
-            {appTasksAnalysisJson}
+            {{appTasksAnalysisJson}}
             
             3. Page Structure Analysis (AnalyzeUserExperience for ONE target page):
-            {pageAnalysisJson}
+            {{pageAnalysisJson}}
             
             YOUR TASK
             1. Determine User Goal: Based on the global application idea (AnalyzeAppIdea) and business tasks (AnalyzeAppTasks), determine what a user with your profile ({auTypeName}) would naturally try to achieve on this specific page.

@@ -20,6 +20,7 @@ langchain4j:
       max-tokens: 8192
       num-predict: 8192
       response-format: json
+      supported-capabilities: RESPONSE_FORMAT_JSON_SCHEMA
 
 
 logging:
