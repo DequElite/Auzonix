@@ -49,11 +49,19 @@ public class RunMonkeyTestService {
 
                 AriaRole role = this.getAriaRole(step.targetElement().role());
 
-                Locator locator = page.getByRole(
-                        role,
-                        new Page.GetByRoleOptions()
-                                .setName(step.targetElement().content())
-                );
+                Locator locator;
+
+                if(role == AriaRole.TEXTBOX) {
+                    locator = page.getByPlaceholder(
+                            step.targetElement().content()
+                    );
+                } else {
+                    locator = page.getByRole(
+                            role,
+                            new Page.GetByRoleOptions()
+                                    .setName(step.targetElement().content())
+                    );
+                }
 
                 switch (step.action()) {
                     case CLICK -> locator.click();

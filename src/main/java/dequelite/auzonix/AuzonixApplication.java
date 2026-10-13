@@ -149,10 +149,14 @@ public class AuzonixApplication {
                         - **SignUp**
                         	- *main info*
                         		- email
+                        		    - example@example.com
                         		- password
+                        		    - Enter your password
                         	- *finance info*
-                        		- Ежемесячная зарплата
-                        		- Валюта
+                        		- Salary
+                        		    - Enter your month salary
+                        		- Currency
+                        		    - Enter your salary currency
                         	- кнопка "Create account"
                     """));
 
