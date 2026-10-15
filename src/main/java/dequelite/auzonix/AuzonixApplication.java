@@ -142,21 +142,15 @@ public class AuzonixApplication {
                     - Повтор главного призыва перед футером: _"Почни бачити свої гроші по-новому"_ + кнопка регистрации
                     - Ниже — футер: ссылки на LogIn, языковой переключатель, возможно контакты/соцсети
                     """, List.of("""
-                        #### Authentication & Registration Flow `✅ дизайн готов`
-                        Ссылка: https://finance-mirror.vercel.app/en/signup
+                        #### Authentication & Registration Flow
+                        Ссылка: https://finance-mirror.vercel.app/en/login
                         ##### Features (инпуты):
                     
-                        - **SignUp**
-                        	- *main info*
-                        		- email
-                        		    - example@example.com
-                        		- password
-                        		    - Enter your password
-                        	- *finance info*
-                        		- Salary
-                        		    - Enter your month salary
-                        		- Currency
-                        		    - Enter your salary currency
+                        - **LogIn**
+                            - email
+                                - example@example.com
+                            - password
+                                - Enter your password
                         	- кнопка "Create account"
                     """));
 
