@@ -146,12 +146,13 @@ public class AuzonixApplication {
                         Ссылка: https://finance-mirror.vercel.app/en/login
                         ##### Features (инпуты):
                     
-                        - **LogIn**
-                            - email
-                                - example@example.com
-                            - password
-                                - Enter your password
-                        	- кнопка "Create account"
+                       - **LogIn**
+                          - email
+                              - placeholder: "example@example.com"
+                          - password
+                              - placeholder: "Enter your password"
+                          - button
+                              - text: "Sign In"
                     """));
 
         };
