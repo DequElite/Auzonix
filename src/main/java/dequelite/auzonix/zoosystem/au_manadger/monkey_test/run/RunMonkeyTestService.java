@@ -34,10 +34,15 @@ public class RunMonkeyTestService {
         log.info("[SCENARIO] goal: {}", chaosScenario.goal());
         log.info("[SCENARIO] url: {}", chaosScenario.targetUrl());
 
+        //BrowserContext browserContext = this.browser.newContext();
+       // Page page = browserContext.newPage();
+
+        //try {
         try (BrowserContext browserContext = this.browser.newContext()){
-            Page page = browserContext.newPage();
+           Page page = browserContext.newPage();
 
             page.onConsoleMessage(msg -> {
+                log.debug("[BROWSER step={}] console.{}: {}", currentStepNumber.get(), msg.type(), msg.text());
                 if(msg.type().equals("error")) {
                     ConsoleErrorDto consoleError = new ConsoleErrorDto(
                             currentStepNumber.get(),
@@ -50,20 +55,29 @@ public class RunMonkeyTestService {
                     log.debug("[BROWSER step={}] console.{}: {}", currentStepNumber.get(), msg.type(), msg.text());
                 }
             });
-
-            // [LOG] только логирование событий браузера
             page.onPageError(err ->
                     log.warn("[BROWSER step={}] uncaught page error: {}", currentStepNumber.get(), err));
             page.onResponse(resp -> {
-                if (resp.status() >= 400) {
                     log.warn("[HTTP step={}] {} {} -> {}", currentStepNumber.get(),
                             resp.request().method(), resp.url(), resp.status());
-                }
             });
             page.onFrameNavigated(frame -> {
                 if (frame == page.mainFrame()) {
                     log.info("[NAV step={}] navigated to {}", currentStepNumber.get(), frame.url());
                 }
+            });
+            page.onRequestFailed(request -> {
+                String message = "Network request failed: "
+                        + request.method() + " "
+                        + request.url()
+                        + " | reason=" + request.failure();
+
+                log.warn("[NETWORK step={}] {}", currentStepNumber.get(), message);
+
+                consoleErrors.add(new ConsoleErrorDto(
+                        currentStepNumber.get(),
+                        message
+                ));
             });
 
             log.info("[NAV] opening {}", chaosScenario.targetUrl());
@@ -132,6 +146,8 @@ public class RunMonkeyTestService {
                         step.stepNumber(), totalSteps,
                         System.currentTimeMillis() - stepStart, page.url());
             }
+
+            page.waitForTimeout(2000);
 
             log.info("[SCENARIO] FINISHED id={} steps={}/{} consoleErrors={} total={} ms | final url={}",
                     chaosScenario.id(), currentStepNumber.get(), totalSteps,
