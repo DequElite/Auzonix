@@ -34,10 +34,6 @@ public class RunMonkeyTestService {
         log.info("[SCENARIO] goal: {}", chaosScenario.goal());
         log.info("[SCENARIO] url: {}", chaosScenario.targetUrl());
 
-        //BrowserContext browserContext = this.browser.newContext();
-       // Page page = browserContext.newPage();
-
-        //try {
         try (BrowserContext browserContext = this.browser.newContext()){
            Page page = browserContext.newPage();
 
@@ -91,7 +87,6 @@ public class RunMonkeyTestService {
                 log.info("[STEP {}/{}] {} | id={} role={} content='{}' | value={}",
                         step.stepNumber(), totalSteps, step.action(),
                         step.targetElement().id(), step.targetElement().role(),
-                        step.targetElement().content(),
                         step.targetElement().content(), step.fillValue());
                 log.info("[STEP {}/{}] purpose: {}", step.stepNumber(), totalSteps, step.purpose());
 

@@ -14,6 +14,7 @@ import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestServ
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateChaosScenarioService;
+import dequelite.auzonix.zoosystem.zooengine.dto.ZooEngineResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,7 @@ public class ZooEngineService {
 
     private final SecondAuLevelType secondAuLevelType;
 
-    public void start(String appDocument, List<String> pagesDocuments) {
+    public ZooEngineResponseDto start(String appDocument, List<String> pagesDocuments) {
         log.debug("======== START ========");
 
         log.debug("//Launching first step...");
@@ -77,5 +78,9 @@ public class ZooEngineService {
         log.debug("//ConsoleErrorDto: {}", consoleErrorDtos);
 
         log.debug("======== FINISH ========");
+
+        return new ZooEngineResponseDto(
+                chaosScenarioDto, consoleErrorDtos
+        );
     }
 }
