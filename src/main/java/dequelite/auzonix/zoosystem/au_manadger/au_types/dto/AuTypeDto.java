@@ -4,6 +4,9 @@ public record AuTypeDto(
         String type,
         String name,
         String id,
-        String domainKnowledge
+        String domainKnowledge,
+        String profileBehavior,
+        String rules,
+        String completionRule
 ) {
 }

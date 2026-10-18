@@ -26,7 +26,7 @@ public class GenerateChaosScenarioService {
     ) {
         AnalyzedAppPageDto mainAnalyzedPage = analyzedPagesDocuments.pages().isEmpty()
                 ? null
-                : analyzedPagesDocuments.pages().get(0);
+                : analyzedPagesDocuments.pages().getFirst();
         if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
 
         return this.generateChaosScenarioPrompt.analyze(
@@ -35,7 +35,10 @@ public class GenerateChaosScenarioService {
                 mainAnalyzedPage,
                 auType.id(),
                 auType.name(),
-                auType.domainKnowledge()
+                auType.domainKnowledge(),
+                auType.profileBehavior(),
+                auType.rules(),
+                auType.completionRule()
         );
     }
 }
