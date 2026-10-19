@@ -8,6 +8,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestService;
@@ -35,8 +36,13 @@ public class ZooEngineService {
     private final RunMonkeyTestService runMonkeyTestService;
 
     private final SecondAuLevelType secondAuLevelType;
+    private final FirstAuLevelType firstAuLevelType;
 
-    public ZooEngineResponseDto start(String appDocument, List<String> pagesDocuments) {
+    public ZooEngineResponseDto start(
+            String appDocument,
+            List<String> pagesDocuments,
+            String auTypeId
+    ) {
         log.debug("======== START ========");
 
         log.debug("//Launching first step...");
@@ -59,7 +65,15 @@ public class ZooEngineService {
         log.debug("//AnalyzedAppPageDto: {}", analyzedAppPageDtos.toString());
 
         log.debug("//Launching fourth step...");
-        AuTypeDto auType = this.secondAuLevelType.getAuType();
+        List<AuTypeDto> auTypes = List.of(this.firstAuLevelType.getAuType(), this.secondAuLevelType.getAuType());
+        AuTypeDto auType = auTypes.stream()
+                .filter(auTypeDto -> auTypeDto.id().equals(auTypeId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                            "Unknown AU type ID: " + auTypeId
+                        )
+                );
 
         ChaosScenarioDto chaosScenarioDto = this.generateChaosScenarioService.generate(
                 analyzedAppPageDtos,
