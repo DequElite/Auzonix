@@ -1,9 +1,6 @@
 package dequelite.auzonix.api.test_manadger.start_test.dto;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
 
 import java.util.List;
@@ -20,6 +17,7 @@ public class StartTestRequestDto {
                         String
                 > pagesDocuments;
 
-    @NotBlank(message = "AU Type Id must not be blank")
-    private String auTypeId;
+    @NotNull(message = "AU count must not be null")
+    @Positive(message = "AU count must be greater than zero")
+    private Integer auCount;
 }

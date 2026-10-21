@@ -6,8 +6,6 @@ import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeUserExperienceS
 import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedPagesDto;
 import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
@@ -15,12 +13,15 @@ import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestServ
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateChaosScenarioService;
+import dequelite.auzonix.zoosystem.zooengine.dto.ScenarioTestResultDto;
 import dequelite.auzonix.zoosystem.zooengine.dto.ZooEngineResponseDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 @Service
 @Slf4j
@@ -38,63 +39,202 @@ public class ZooEngineService {
     private final SecondAuLevelType secondAuLevelType;
     private final FirstAuLevelType firstAuLevelType;
 
+    private final Random random = new Random();
+
     public ZooEngineResponseDto start(
             String appDocument,
             List<String> pagesDocuments,
-            String auTypeId
+            Integer auCount
     ) {
         log.debug("======== START ========");
 
-        log.debug("//Launching first step...");
-        AnalyzedAppIdeaDto analyzedAppIdeaDto = this.analyzeAppIdeaService.analyze(appDocument);
-        log.debug("//First step completed:");
-        log.debug("//AnalyzedAppIdeaDto: {}", analyzedAppIdeaDto.toString());
+        AnalyzedAppIdeaDto analyzedAppIdeaDto = analyzeAppIdea(appDocument);
 
-        log.debug("//Launching second step...");
-        AnalyzedTasksDto analyzedAppTasksDto = this.analyzeAppTasksService.analyze(
-                appDocument, analyzedAppIdeaDto
+        AnalyzedTasksDto analyzedAppTasksDto = analyzeAppTasks(
+                appDocument,
+                analyzedAppIdeaDto
         );
-        log.debug("//Second step completed:");
-        log.debug("//AnalyzedAppTasksDto: {}", analyzedAppTasksDto.toString());
 
-        log.debug("//Launching third step...");
-        AnalyzedPagesDto analyzedAppPageDtos = this.analyzeUserExperienceService.analyze(
-                pagesDocuments, analyzedAppIdeaDto, analyzedAppTasksDto
+        AnalyzedPagesDto analyzedAppPageDtos = analyzeUserExperience(
+                pagesDocuments,
+                analyzedAppIdeaDto,
+                analyzedAppTasksDto
         );
-        log.debug("//Third step completed:");
-        log.debug("//AnalyzedAppPageDto: {}", analyzedAppPageDtos.toString());
 
-        log.debug("//Launching fourth step...");
-        List<AuTypeDto> auTypes = List.of(this.firstAuLevelType.getAuType(), this.secondAuLevelType.getAuType());
-        AuTypeDto auType = auTypes.stream()
-                .filter(auTypeDto -> auTypeDto.id().equals(auTypeId))
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                            "Unknown AU type ID: " + auTypeId
-                        )
-                );
-
-        ChaosScenarioDto chaosScenarioDto = this.generateChaosScenarioService.generate(
+        List<ChaosScenarioDto> scenarios = generateChaosScenarios(
                 analyzedAppPageDtos,
                 analyzedAppIdeaDto,
                 analyzedAppTasksDto,
-                auType
+                auCount
         );
-        log.debug("//Fourth step completed:");
-        log.debug("//ChaosScenarioDto: {}", chaosScenarioDto);
 
-        log.debug("//Launching fifth step...");
-        List<ConsoleErrorDto> consoleErrorDtos = this.runMonkeyTestService.run(
-                chaosScenarioDto
-        );
-        log.debug("//Fifth step completed:");
-        log.debug("//ConsoleErrorDto: {}", consoleErrorDtos);
+        List<ScenarioTestResultDto> scenarioErrors =
+                this.runMonkeyTest(scenarios, auCount);
 
         log.debug("======== FINISH ========");
 
         return new ZooEngineResponseDto(
-                chaosScenarioDto, consoleErrorDtos
+                scenarios,
+                scenarioErrors
         );
+    }
+
+    private AnalyzedAppIdeaDto analyzeAppIdea(String appDocument) {
+        log.debug("//Launching first step...");
+
+        AnalyzedAppIdeaDto result = analyzeAppIdeaService.analyze(appDocument);
+
+        log.debug("//First step completed:");
+        log.debug("//AnalyzedAppIdeaDto: {}", result);
+
+        return result;
+    }
+
+    private AnalyzedTasksDto analyzeAppTasks(
+            String appDocument,
+            AnalyzedAppIdeaDto analyzedAppIdeaDto
+    ) {
+        log.debug("//Launching second step...");
+
+        AnalyzedTasksDto result = analyzeAppTasksService.analyze(
+                appDocument,
+                analyzedAppIdeaDto
+        );
+
+        log.debug("//Second step completed:");
+        log.debug("//AnalyzedAppTasksDto: {}", result);
+
+        return result;
+    }
+
+    private AnalyzedPagesDto analyzeUserExperience(
+            List<String> pagesDocuments,
+            AnalyzedAppIdeaDto analyzedAppIdeaDto,
+            AnalyzedTasksDto analyzedAppTasksDto
+    ) {
+        log.debug("//Launching third step...");
+
+        AnalyzedPagesDto result = analyzeUserExperienceService.analyze(
+                pagesDocuments,
+                analyzedAppIdeaDto,
+                analyzedAppTasksDto
+        );
+
+        log.debug("//Third step completed:");
+        log.debug("//AnalyzedPagesDto: {}", result);
+
+        return result;
+    }
+
+    private AuTypeDto resolveAuType(Integer auTypeId) {
+        log.debug("//Resolving AU type...");
+
+        List<AuTypeDto> auTypes = List.of(
+                firstAuLevelType.getAuType(),
+                secondAuLevelType.getAuType()
+        );
+
+        AuTypeDto result = auTypes.stream()
+                .filter(type -> type.id().equals(auTypeId))
+                .findFirst()
+                .orElseThrow(() ->
+                        new IllegalArgumentException(
+                                "Unknown AU type ID: " + auTypeId
+                        )
+                );
+
+        log.debug("//AU type resolved: {}", result);
+
+        return result;
+    }
+
+    private List<ChaosScenarioDto> generateChaosScenarios(
+            AnalyzedPagesDto analyzedAppPageDtos,
+            AnalyzedAppIdeaDto analyzedAppIdeaDto,
+            AnalyzedTasksDto analyzedAppTasksDto,
+            Integer auCount
+    ) {
+        log.debug("//Launching fourth step...");
+
+        List<AuTypeDto> auTypes = List.of(
+                firstAuLevelType.getAuType(),
+                secondAuLevelType.getAuType()
+        );
+
+        List<AuTypeDto> auTypesMap = new ArrayList<>(auCount);
+
+        for (int i = 0; i < auCount; i++) {
+            int randomIndex = this.random.nextInt(auTypes.size());
+
+            auTypesMap.add(auTypes.get(randomIndex));
+        }
+
+        log.debug("Selected AU types: {}", auTypesMap);
+
+        List<ChaosScenarioDto> scenarios = new ArrayList<>(auCount);
+
+        for(AuTypeDto auType : auTypesMap) {
+            ChaosScenarioDto scenario = this.generateChaosScenarioService.generate(
+                    analyzedAppPageDtos,
+                    analyzedAppIdeaDto,
+                    analyzedAppTasksDto,
+                    auType
+            );
+
+            scenarios.add(scenario);
+
+            log.debug(
+                    "Generated scenario for AU type {}: {}",
+                    auType.id(),
+                    scenario
+            );
+        }
+
+        log.debug(
+                "//Fourth step completed. Generated {} scenarios",
+                scenarios.size()
+        );
+
+        return scenarios;
+    }
+
+    private List<ScenarioTestResultDto> runMonkeyTest(
+            List<ChaosScenarioDto> chaosScenarios,
+            Integer auCount
+    ) {
+        log.debug("//Launching fifth step...");
+
+        List<ScenarioTestResultDto> scenariosResults = new ArrayList<>(auCount);
+
+        for (ChaosScenarioDto scenario : chaosScenarios) {
+            log.debug(
+                    "Running scenario: {}",
+                    scenario.id()
+            );
+
+            List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
+                scenario
+            );
+
+            scenariosResults.add(
+                    new ScenarioTestResultDto(
+                            scenario.id(),
+                            consoleErrors
+                    )
+            );
+
+            log.debug(
+                    "Scenario {} completed with {} errors",
+                    scenario.id(),
+                    consoleErrors.size()
+            );
+        }
+
+        log.debug(
+                "//Fifth step completed. Executed {} scenarios",
+                scenariosResults.size()
+        );
+
+        return scenariosResults;
     }
 }

@@ -6,7 +6,7 @@ import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import java.util.List;
 
 public record ZooEngineResponseDto(
-    ChaosScenarioDto chaosScenario,
-    List<ConsoleErrorDto> consoleErrors
+    List<ChaosScenarioDto> scenarios,
+    List<ScenarioTestResultDto> scenariosErrors
 ) {
 }
