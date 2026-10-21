@@ -126,28 +126,6 @@ public class ZooEngineService {
         return result;
     }
 
-    private AuTypeDto resolveAuType(Integer auTypeId) {
-        log.debug("//Resolving AU type...");
-
-        List<AuTypeDto> auTypes = List.of(
-                firstAuLevelType.getAuType(),
-                secondAuLevelType.getAuType()
-        );
-
-        AuTypeDto result = auTypes.stream()
-                .filter(type -> type.id().equals(auTypeId))
-                .findFirst()
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Unknown AU type ID: " + auTypeId
-                        )
-                );
-
-        log.debug("//AU type resolved: {}", result);
-
-        return result;
-    }
-
     private List<ChaosScenarioDto> generateChaosScenarios(
             AnalyzedPagesDto analyzedAppPageDtos,
             AnalyzedAppIdeaDto analyzedAppIdeaDto,
