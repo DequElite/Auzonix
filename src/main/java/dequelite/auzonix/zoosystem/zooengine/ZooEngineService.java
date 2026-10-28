@@ -22,6 +22,10 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -40,6 +44,8 @@ public class ZooEngineService {
     private final FirstAuLevelType firstAuLevelType;
 
     private final Random random = new Random();
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public ZooEngineResponseDto start(
             String appDocument,
@@ -182,31 +188,39 @@ public class ZooEngineService {
     ) {
         log.debug("//Launching fifth step...");
 
-        List<ScenarioTestResultDto> scenariosResults = new ArrayList<>(auCount);
+        List<CompletableFuture<ScenarioTestResultDto>> futures = chaosScenarios
+                .stream()
+                .map(scenario ->
+                    CompletableFuture.supplyAsync(() -> {
+                        log.debug(
+                                "Running scenario: {}",
+                                scenario.id()
+                        );
 
-        for (ChaosScenarioDto scenario : chaosScenarios) {
-            log.debug(
-                    "Running scenario: {}",
-                    scenario.id()
-            );
+                        List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
+                                scenario
+                        );
 
-            List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
-                scenario
-            );
+                        log.debug(
+                                "Scenario {} completed with {} errors",
+                                scenario.id(),
+                                consoleErrors.size()
+                        );
 
-            scenariosResults.add(
-                    new ScenarioTestResultDto(
-                            scenario.id(),
-                            consoleErrors
-                    )
-            );
+                        return  new ScenarioTestResultDto(
+                                scenario.id(),
+                                consoleErrors
+                        );
+                    }, executorService)
+                ).toList();
 
-            log.debug(
-                    "Scenario {} completed with {} errors",
-                    scenario.id(),
-                    consoleErrors.size()
-            );
-        }
+        CompletableFuture.allOf(
+                futures.toArray(new CompletableFuture<?>[0])
+        ).join();
+
+        List<ScenarioTestResultDto> scenariosResults = futures.stream()
+                        .map(CompletableFuture::join)
+                        .collect(Collectors.toList());
 
         log.debug(
                 "//Fifth step completed. Executed {} scenarios",
