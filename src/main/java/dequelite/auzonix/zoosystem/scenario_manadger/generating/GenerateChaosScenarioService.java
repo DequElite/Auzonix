@@ -6,19 +6,83 @@ import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GenerateChaosScenarioService {
     private final GenerateChaosScenarioPrompt generateChaosScenarioPrompt;
 
-    public ChaosScenarioDto generate(
+    private final SecondAuLevelType secondAuLevelType;
+    private final FirstAuLevelType firstAuLevelType;
+
+    private final Random random = new Random();
+
+    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+
+    public List<ChaosScenarioDto> generateChaosScenariosAsync(
+            AnalyzedPagesDto analyzedAppPageDtos,
+            AnalyzedAppIdeaDto analyzedAppIdeaDto,
+            AnalyzedTasksDto analyzedAppTasksDto,
+            Integer auCount
+    ) {
+        List<AuTypeDto> auTypes = List.of(
+                firstAuLevelType.getAuType(),
+                secondAuLevelType.getAuType()
+        );
+
+        List<AuTypeDto> auTypesMap = new ArrayList<>(auCount);
+
+        for (int i = 0; i < auCount; i++) {
+            int randomIndex = this.random.nextInt(auTypes.size());
+
+            auTypesMap.add(auTypes.get(randomIndex));
+        }
+
+        log.debug("Selected AU types: {}", auTypesMap);
+
+        List<CompletableFuture<ChaosScenarioDto>> futures = auTypesMap.stream()
+                .map(auType ->
+                            CompletableFuture.supplyAsync(() -> {
+                                ChaosScenarioDto scenario = this.generateChaosScenario(
+                                        analyzedAppPageDtos,
+                                        analyzedAppIdeaDto,
+                                        analyzedAppTasksDto,
+                                        auType
+                                );
+
+                                log.debug(
+                                        "Generated scenario for AU type {}: {}",
+                                        auType.id(),
+                                        scenario
+                                );
+                                return scenario;
+                            }, executorService)
+                        ).toList();
+
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture<?>[0])).join();
+
+        return futures.stream()
+                .map(CompletableFuture::join)
+                .collect(Collectors.toList());
+    }
+
+    public ChaosScenarioDto generateChaosScenario(
             AnalyzedPagesDto analyzedPagesDocuments,
             AnalyzedAppIdeaDto appIdeaAnalysis,
             AnalyzedTasksDto appTasksAnalysis,

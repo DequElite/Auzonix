@@ -10,6 +10,7 @@ import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestService;
+import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateChaosScenarioService;
@@ -37,15 +38,7 @@ public class ZooEngineService {
     private final AnalyzeUserExperienceService analyzeUserExperienceService;
 
     private final GenerateChaosScenarioService generateChaosScenarioService;
-
-    private final RunMonkeyTestService runMonkeyTestService;
-
-    private final SecondAuLevelType secondAuLevelType;
-    private final FirstAuLevelType firstAuLevelType;
-
-    private final Random random = new Random();
-
-    private final ExecutorService executorService = Executors.newFixedThreadPool(4);
+    private final RunMonkeyTestsAsyncService runMonkeyTestsAsyncService;
 
     public ZooEngineResponseDto start(
             String appDocument,
@@ -75,7 +68,7 @@ public class ZooEngineService {
         );
 
         List<ScenarioTestResultDto> scenarioErrors =
-                this.runMonkeyTest(scenarios, auCount);
+                this.runMonkeyTest(scenarios);
 
         log.debug("======== FINISH ========");
 
@@ -140,39 +133,12 @@ public class ZooEngineService {
     ) {
         log.debug("//Launching fourth step...");
 
-        List<AuTypeDto> auTypes = List.of(
-                firstAuLevelType.getAuType(),
-                secondAuLevelType.getAuType()
+        List<ChaosScenarioDto> scenarios = this.generateChaosScenarioService.generateChaosScenariosAsync(
+                analyzedAppPageDtos,
+                analyzedAppIdeaDto,
+                analyzedAppTasksDto,
+                auCount
         );
-
-        List<AuTypeDto> auTypesMap = new ArrayList<>(auCount);
-
-        for (int i = 0; i < auCount; i++) {
-            int randomIndex = this.random.nextInt(auTypes.size());
-
-            auTypesMap.add(auTypes.get(randomIndex));
-        }
-
-        log.debug("Selected AU types: {}", auTypesMap);
-
-        List<ChaosScenarioDto> scenarios = new ArrayList<>(auCount);
-
-        for(AuTypeDto auType : auTypesMap) {
-            ChaosScenarioDto scenario = this.generateChaosScenarioService.generate(
-                    analyzedAppPageDtos,
-                    analyzedAppIdeaDto,
-                    analyzedAppTasksDto,
-                    auType
-            );
-
-            scenarios.add(scenario);
-
-            log.debug(
-                    "Generated scenario for AU type {}: {}",
-                    auType.id(),
-                    scenario
-            );
-        }
 
         log.debug(
                 "//Fourth step completed. Generated {} scenarios",
@@ -183,44 +149,11 @@ public class ZooEngineService {
     }
 
     private List<ScenarioTestResultDto> runMonkeyTest(
-            List<ChaosScenarioDto> chaosScenarios,
-            Integer auCount
+            List<ChaosScenarioDto> chaosScenarios
     ) {
         log.debug("//Launching fifth step...");
 
-        List<CompletableFuture<ScenarioTestResultDto>> futures = chaosScenarios
-                .stream()
-                .map(scenario ->
-                    CompletableFuture.supplyAsync(() -> {
-                        log.debug(
-                                "Running scenario: {}",
-                                scenario.id()
-                        );
-
-                        List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
-                                scenario
-                        );
-
-                        log.debug(
-                                "Scenario {} completed with {} errors",
-                                scenario.id(),
-                                consoleErrors.size()
-                        );
-
-                        return  new ScenarioTestResultDto(
-                                scenario.id(),
-                                consoleErrors
-                        );
-                    }, executorService)
-                ).toList();
-
-        CompletableFuture.allOf(
-                futures.toArray(new CompletableFuture<?>[0])
-        ).join();
-
-        List<ScenarioTestResultDto> scenariosResults = futures.stream()
-                        .map(CompletableFuture::join)
-                        .collect(Collectors.toList());
+        List<ScenarioTestResultDto> scenariosResults = this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios);
 
         log.debug(
                 "//Fifth step completed. Executed {} scenarios",
