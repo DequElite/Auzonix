@@ -9,6 +9,8 @@ import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
+import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
+import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +35,8 @@ public class GenerateChaosScenarioService {
 
     private final Random random = new Random();
 
+    private final EventDispatcher eventDispatcher;
+
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public List<ChaosScenarioDto> generateChaosScenariosAsync(
@@ -54,7 +58,13 @@ public class GenerateChaosScenarioService {
             auTypesMap.add(auTypes.get(randomIndex));
         }
 
-        log.debug("Selected AU types: {}", auTypesMap);
+        eventDispatcher.publish(
+                new SystemEventDto<>(
+                        GenerateChaosScenarioService.class,
+                        null,
+                        "Selected AU types: %s".formatted(auTypesMap)
+                )
+        );
 
         List<CompletableFuture<ChaosScenarioDto>> futures = auTypesMap.stream()
                 .map(auType ->
@@ -66,11 +76,6 @@ public class GenerateChaosScenarioService {
                                         auType
                                 );
 
-                                log.debug(
-                                        "Generated scenario for AU type {}: {}",
-                                        auType.id(),
-                                        scenario
-                                );
                                 return scenario;
                             }, executorService)
                         ).toList();

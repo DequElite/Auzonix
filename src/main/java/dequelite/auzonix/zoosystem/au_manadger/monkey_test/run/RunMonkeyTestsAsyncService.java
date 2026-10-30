@@ -1,6 +1,8 @@
 package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
+import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.zooengine.dto.ScenarioTestResultDto;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class RunMonkeyTestsAsyncService {
 
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
+    private final EventDispatcher eventDispatcher;
 
     public List<ScenarioTestResultDto> runMonkeyTestsAsync(
             List<ChaosScenarioDto> chaosScenarios
@@ -30,19 +33,24 @@ public class RunMonkeyTestsAsyncService {
                 .stream()
                 .map(scenario ->
                         CompletableFuture.supplyAsync(() -> {
-                            log.debug(
-                                    "Running scenario: {}",
-                                    scenario.id()
+                            eventDispatcher.publish(
+                                    new SystemEventDto<>(
+                                            RunMonkeyTestsAsyncService.class,
+                                            null,
+                                            "Running scenario: %s".formatted(scenario.id())
+                                    )
                             );
 
                             List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
                                     scenario
                             );
 
-                            log.debug(
-                                    "Scenario {} completed with {} errors",
-                                    scenario.id(),
-                                    consoleErrors.size()
+                            eventDispatcher.publish(
+                                    new SystemEventDto<>(
+                                            RunMonkeyTestsAsyncService.class,
+                                            null,
+                                            "Scenario %s completed with %s errors".formatted(scenario.id(), consoleErrors.size())
+                                    )
                             );
 
                             return  new ScenarioTestResultDto(
