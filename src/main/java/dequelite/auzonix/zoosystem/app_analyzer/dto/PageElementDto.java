@@ -5,7 +5,7 @@ import java.util.List;
 public record PageElementDto(
         String id,
         Role role,
-        String content,
+        AttributesDto attributes,
         String href,
         List<ActionType> supportedActions
 ) {

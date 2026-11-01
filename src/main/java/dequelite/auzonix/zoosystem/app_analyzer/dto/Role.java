@@ -5,5 +5,10 @@ public enum Role {
     LINK,
     TEXTBOX,
     HEADING,
-    PARAGRAPH
+    PARAGRAPH,
+    CHECKBOX,
+    RADIO,
+    SWITCH,
+    COMBOBOX,
+    OPTION
 }
