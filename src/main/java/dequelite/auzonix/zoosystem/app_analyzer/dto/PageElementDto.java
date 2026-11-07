@@ -6,7 +6,6 @@ public record PageElementDto(
         String id,
         Role role,
         AttributesDto attributes,
-        String href,
         List<ActionType> supportedActions
 ) {
 

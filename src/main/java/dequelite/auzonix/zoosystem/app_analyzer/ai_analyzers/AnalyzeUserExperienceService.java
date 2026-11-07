@@ -1,11 +1,10 @@
-package dequelite.auzonix.zoosystem.app_analyzer.analyzers;
+package dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers;
 
 import dequelite.auzonix.zoosystem.ai.AnalyzeAppPagePrompt;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedPagesDto;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDto;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

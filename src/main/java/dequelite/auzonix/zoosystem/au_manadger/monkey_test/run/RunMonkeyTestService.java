@@ -47,63 +47,63 @@ public class RunMonkeyTestService {
             );
 
             try (BrowserContext browserContext = browser.newContext()) {
-                Page page = browserContext.newPage();
-
-                this.browserEventListenerService.register(
-                        consoleErrors,
-                        page,
-                        currentStepNumber
-                );
-
-                page.navigate(chaosScenario.targetUrl());
-
-                publishEvent(null, "INFO [NAV] opened %s (title='%s')"
-                        .formatted(page.url(), page.title()));
-
-                for (ChSStepDto step : chaosScenario.steps()) {
-                    currentStepNumber.set(step.stepNumber());
-
-                    publishEvent(null, "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
-                            .formatted(
-                                    step.stepNumber(),
-                                    totalSteps,
-                                    step.action(),
-                                    step.targetElement().id(),
-                                    step.targetElement().role(),
-                                    step.fillValue()
-                            ));
-
-                    AriaRole role = this.getAriaRole(step.targetElement().role());
-
-                    Locator locator = this.locatorService.locateElement(
-                            step,
+                try (Page page = browserContext.newPage()) {
+                    this.browserEventListenerService.register(
+                            consoleErrors,
                             page,
-                            role,
-                            totalSteps
+                            currentStepNumber
                     );
 
-                   this.actService.actElement(
-                           step,
-                           locator,
-                           totalSteps,
-                           role
-                   );
+                    page.navigate(chaosScenario.targetUrl());
 
-                }
+                    publishEvent(null, "INFO [NAV] opened %s (title='%s')"
+                            .formatted(page.url(), page.title()));
 
-                page.waitForTimeout(2000);
+                    for (ChSStepDto step : chaosScenario.steps()) {
+                        currentStepNumber.set(step.stepNumber());
 
-                publishEvent(null, "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
-                        .formatted(
-                                chaosScenario.id(),
-                                currentStepNumber.get(),
+                        publishEvent(null, "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
+                                .formatted(
+                                        step.stepNumber(),
+                                        totalSteps,
+                                        step.action(),
+                                        step.targetElement().id(),
+                                        step.targetElement().role(),
+                                        step.fillValue()
+                                ));
+
+                        AriaRole role = this.getAriaRole(step.targetElement().role());
+
+                        Locator locator = this.locatorService.locateElement(
+                                step,
+                                page,
+                                role,
+                                totalSteps
+                        );
+
+                        this.actService.actElement(
+                                step,
+                                locator,
                                 totalSteps,
-                                consoleErrors.size(),
-                                System.currentTimeMillis() - scenarioStart,
-                                page.url()
-                        ));
+                                role
+                        );
 
-                return consoleErrors;
+                    }
+
+                    page.waitForTimeout(2000);
+
+                    publishEvent(null, "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
+                            .formatted(
+                                    chaosScenario.id(),
+                                    currentStepNumber.get(),
+                                    totalSteps,
+                                    consoleErrors.size(),
+                                    System.currentTimeMillis() - scenarioStart,
+                                    page.url()
+                            ));
+
+                    return consoleErrors;
+                }
             }
         } catch (Exception e) {
             String reason = e.getMessage() == null

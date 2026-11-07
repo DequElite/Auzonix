@@ -88,13 +88,13 @@ public interface AnalyzeAppPagePrompt {
             Input:
             
             Page Document:
-            {pageDocument}
+            {{pageDocument}}
             
             Application Idea Analysis:
-            {appIdeaAnalysis}
+            {{appIdeaAnalysis}}
             
             Application Tasks Analysis:
-            {appTasksAnalysis}
+            {{appTasksAnalysis}}
             
             Output:
             

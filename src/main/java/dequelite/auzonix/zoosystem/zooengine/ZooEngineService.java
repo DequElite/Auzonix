@@ -1,17 +1,14 @@
 package dequelite.auzonix.zoosystem.zooengine;
 
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeAppIdeaService;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeAppTasksService;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.AnalyzeUserExperienceService;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedPagesDto;
-import dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto.AnalyzedTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.AnalyzeAppIdeaService;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.AnalyzeAppTasksService;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.AnalyzeUserExperienceService;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDto;
+import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedTasksDto;
+import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowserDiscoveryService;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
-import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
-import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
-import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
-import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestService;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
-import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
@@ -22,13 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -37,7 +28,9 @@ public class ZooEngineService {
 
     private final AnalyzeAppIdeaService analyzeAppIdeaService;
     private final AnalyzeAppTasksService analyzeAppTasksService;
-    private final AnalyzeUserExperienceService analyzeUserExperienceService;
+    //private final AnalyzeUserExperienceService analyzeUserExperienceService;
+
+    private final AnalyzeBrowserDiscoveryService analyzeBrowserDiscoveryService;
 
     private final GenerateChaosScenarioService generateChaosScenarioService;
     private final RunMonkeyTestsAsyncService runMonkeyTestsAsyncService;
@@ -46,7 +39,7 @@ public class ZooEngineService {
 
     public ZooEngineResponseDto start(
             String appDocument,
-            List<String> pagesDocuments,
+            List<PageDto> pagesDocuments,
             Integer auCount
     ) {
         publishEvent(null, "======== START ========");
@@ -58,10 +51,14 @@ public class ZooEngineService {
                 analyzedAppIdeaDto
         );
 
-        AnalyzedPagesDto analyzedAppPageDtos = analyzeUserExperience(
-                pagesDocuments,
-                analyzedAppIdeaDto,
-                analyzedAppTasksDto
+//        AnalyzedPagesDto analyzedAppPageDtos = analyzeUserExperience(
+//                pagesDocuments,
+//                analyzedAppIdeaDto,
+//                analyzedAppTasksDto
+//        );
+
+        AnalyzedPagesDto analyzedAppPageDtos = analyzeAppPages(
+                pagesDocuments
         );
 
         List<ChaosScenarioDto> scenarios = generateChaosScenarios(
@@ -110,21 +107,35 @@ public class ZooEngineService {
         return result;
     }
 
-    private AnalyzedPagesDto analyzeUserExperience(
-            List<String> pagesDocuments,
-            AnalyzedAppIdeaDto analyzedAppIdeaDto,
-            AnalyzedTasksDto analyzedAppTasksDto
+//    private AnalyzedPagesDto analyzeUserExperience(
+//            List<String> pagesDocuments,
+//            AnalyzedAppIdeaDto analyzedAppIdeaDto,
+//            AnalyzedTasksDto analyzedAppTasksDto
+//    ) {
+//        publishEvent(null, "//Launching third step...");
+//
+//        AnalyzedPagesDto result = analyzeUserExperienceService.analyze(
+//                pagesDocuments,
+//                analyzedAppIdeaDto,
+//                analyzedAppTasksDto
+//        );
+//
+//        publishEvent(result, "//Third step completed");
+//        //log.debug("//AnalyzedPagesDto: {}", result);
+//
+//        return result;
+//    }
+
+    private AnalyzedPagesDto analyzeAppPages(
+            List<PageDto> pages
     ) {
         publishEvent(null, "//Launching third step...");
 
-        AnalyzedPagesDto result = analyzeUserExperienceService.analyze(
-                pagesDocuments,
-                analyzedAppIdeaDto,
-                analyzedAppTasksDto
+        AnalyzedPagesDto result = this.analyzeBrowserDiscoveryService.analyze(
+                pages
         );
 
         publishEvent(result, "//Third step completed");
-        //log.debug("//AnalyzedPagesDto: {}", result);
 
         return result;
     }

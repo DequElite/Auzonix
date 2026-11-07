@@ -1,4 +1,4 @@
-package dequelite.auzonix.zoosystem.app_analyzer.analyzers;
+package dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers;
 
 import dequelite.auzonix.zoosystem.ai.AnalyzeAppIdeaPrompt;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;

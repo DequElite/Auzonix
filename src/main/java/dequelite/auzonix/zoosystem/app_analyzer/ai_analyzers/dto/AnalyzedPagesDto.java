@@ -1,4 +1,4 @@
-package dequelite.auzonix.zoosystem.app_analyzer.analyzers.dto;
+package dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto;
 
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 
