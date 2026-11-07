@@ -133,6 +133,7 @@ public class RunMonkeyTestService {
             case SWITCH -> AriaRole.SWITCH;
             case COMBOBOX -> AriaRole.COMBOBOX;
             case OPTION -> AriaRole.OPTION;
+            case SPINBUTTON -> AriaRole.SPINBUTTON;
             case PARAGRAPH -> throw new IllegalArgumentException(
                     "PARAGRAPH does not have a corresponding AriaRole"
             );

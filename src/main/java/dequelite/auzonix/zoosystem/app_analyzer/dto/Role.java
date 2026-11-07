@@ -10,5 +10,6 @@ public enum Role {
     RADIO,
     SWITCH,
     COMBOBOX,
-    OPTION
+    OPTION,
+    SPINBUTTON
 }

@@ -44,8 +44,17 @@ public class ActService {
             }
 
             case FILL -> {
-                if (role == AriaRole.TEXTBOX) {
-                    locator.fill(step.fillValue());
+                if (role == AriaRole.TEXTBOX || role == AriaRole.SPINBUTTON) {
+                    try {
+                        locator.fill(step.fillValue());
+                    } catch (Exception e) {
+                        publishEvent(null, "WARN [STEP %d/%d] fill failed, trying pressSequentially"
+                                .formatted(step.stepNumber(), totalSteps));
+
+                        locator.click();
+                        locator.press("Control+A");
+                        locator.pressSequentially(step.fillValue());
+                    }
 
                     publishEvent(null, "DEBUG [STEP %d/%d] filled"
                             .formatted(step.stepNumber(), totalSteps));
@@ -53,7 +62,7 @@ public class ActService {
                     publishEvent(null, "ERROR [STEP %d/%d] CANNOT FILL NOT TEXTBOX (role=%s)"
                             .formatted(step.stepNumber(), totalSteps, role));
 
-                    throw new RuntimeException("ILLEGAL ROLE");
+                    throw new IllegalArgumentException("ILLEGAL ROLE");
                 }
             }
 

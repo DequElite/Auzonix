@@ -4,6 +4,8 @@ public record AttributesDto(
         String content,
         String id,
         String className,
-        String placeholder
+        String placeholder,
+        String name,
+        String ariaLabel
 ) {
 }

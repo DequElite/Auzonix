@@ -19,23 +19,25 @@ import java.util.Map;
 public class AnalyzeBrowserDiscoveryService {
     private final EventDispatcher eventDispatcher;
 
-    private final Map<Role, AriaRole> rolesToFind = Map.of(
-            Role.BUTTON, AriaRole.BUTTON,
-            Role.LINK, AriaRole.LINK,
-            Role.TEXTBOX, AriaRole.TEXTBOX,
-            Role.HEADING, AriaRole.HEADING,
-            Role.PARAGRAPH, AriaRole.PARAGRAPH,
-            Role.CHECKBOX, AriaRole.CHECKBOX,
-            Role.RADIO, AriaRole.RADIO,
-            Role.SWITCH, AriaRole.SWITCH,
-            Role.COMBOBOX, AriaRole.COMBOBOX,
-            Role.OPTION, AriaRole.OPTION
+    private final Map<Role, AriaRole> rolesToFind = Map.ofEntries(
+            Map.entry(Role.BUTTON, AriaRole.BUTTON),
+            Map.entry(Role.LINK, AriaRole.LINK),
+            Map.entry(Role.TEXTBOX, AriaRole.TEXTBOX),
+            Map.entry(Role.HEADING, AriaRole.HEADING),
+            Map.entry(Role.PARAGRAPH, AriaRole.PARAGRAPH),
+            Map.entry(Role.CHECKBOX, AriaRole.CHECKBOX),
+            Map.entry(Role.RADIO, AriaRole.RADIO),
+            Map.entry(Role.SWITCH, AriaRole.SWITCH),
+            Map.entry(Role.COMBOBOX, AriaRole.COMBOBOX),
+            Map.entry(Role.OPTION, AriaRole.OPTION),
+            Map.entry(Role.SPINBUTTON, AriaRole.SPINBUTTON)
     );
 
     private final Map<Role, List<ActionType>> availableActions = Map.of(
             Role.BUTTON, List.of(ActionType.CLICK),
             Role.LINK, List.of(ActionType.CLICK),
             Role.TEXTBOX, List.of(ActionType.FILL),
+            Role.SPINBUTTON, List.of(ActionType.FILL),
             Role.CHECKBOX, List.of(ActionType.CHECK, ActionType.UNCHECK),
             Role.RADIO, List.of(ActionType.CHECK),
             Role.SWITCH, List.of(ActionType.CHECK, ActionType.UNCHECK),
@@ -103,7 +105,9 @@ public class AnalyzeBrowserDiscoveryService {
                                             element.innerText(),
                                             element.getAttribute("id"),
                                             element.getAttribute("class"),
-                                            element.getAttribute("placeholder")
+                                            element.getAttribute("placeholder"),
+                                            element.getAttribute("name"),
+                                            element.getAttribute("aria-label")
                                     ),
                                     actions
                             )
