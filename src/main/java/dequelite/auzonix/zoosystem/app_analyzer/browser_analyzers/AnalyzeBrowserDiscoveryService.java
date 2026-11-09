@@ -4,6 +4,8 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.*;
+import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
+import dequelite.auzonix.zoosystem.error_collector.dto.SystemErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AnalyzeBrowserDiscoveryService {
     private final EventDispatcher eventDispatcher;
+    private final ErrorCollectorService errorCollectorService;
 
     private final Map<Role, AriaRole> rolesToFind = Map.ofEntries(
             Map.entry(Role.BUTTON, AriaRole.BUTTON),
@@ -66,14 +69,18 @@ public class AnalyzeBrowserDiscoveryService {
                 return new AnalyzedPagesDto(analyzedPages);
             }
         } catch (Exception e) {
-            String reason = e.getMessage() == null
-                    ? "unknown"
-                    : e.getMessage().lines().findFirst().orElse("unknown");
+            String reason = e.getMessage();
 
-            publishEvent(null, "ERROR [SCENARIO] FAILED at Browser Discovery| reason: %s"
-                    .formatted(
-                            reason
-                    ));
+            this.errorCollectorService.addSystemError(
+                    new SystemErrorDto(
+                            AnalyzeBrowserDiscoveryService.class,
+                            "ERROR [SCENARIO] FAILED at Browser Discovery| reason: %s"
+                                    .formatted(
+                                            reason
+                                    ),
+                            e
+                    )
+            );
 
             return new AnalyzedPagesDto(analyzedPages);
         }

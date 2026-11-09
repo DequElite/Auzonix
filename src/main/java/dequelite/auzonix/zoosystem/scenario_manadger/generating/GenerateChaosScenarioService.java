@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -97,7 +98,7 @@ public class GenerateChaosScenarioService {
                 : analyzedPagesDocuments.pages().getFirst();
         if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
 
-        return this.generateChaosScenarioPrompt.analyze(
+        ChaosScenarioDto scenario = this.generateChaosScenarioPrompt.analyze(
                 appIdeaAnalysis,
                 appTasksAnalysis.tasks(),
                 mainAnalyzedPage,
@@ -107,6 +108,15 @@ public class GenerateChaosScenarioService {
                 auType.profileBehavior(),
                 auType.rules(),
                 auType.completionRule()
+        );
+
+        return new ChaosScenarioDto(
+                UUID.randomUUID(),
+                scenario.name(),
+                scenario.goal(),
+                scenario.auType(),
+                scenario.targetUrl(),
+                scenario.steps()
         );
     }
 }

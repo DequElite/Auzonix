@@ -9,6 +9,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowser
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
+import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
@@ -37,6 +38,8 @@ public class ZooEngineService {
 
     private final EventDispatcher eventDispatcher;
 
+    private final ErrorCollectorService errorCollectorService;
+
     public ZooEngineResponseDto start(
             String appDocument,
             List<PageDto> pagesDocuments,
@@ -51,12 +54,6 @@ public class ZooEngineService {
                 analyzedAppIdeaDto
         );
 
-//        AnalyzedPagesDto analyzedAppPageDtos = analyzeUserExperience(
-//                pagesDocuments,
-//                analyzedAppIdeaDto,
-//                analyzedAppTasksDto
-//        );
-
         AnalyzedPagesDto analyzedAppPageDtos = analyzeAppPages(
                 pagesDocuments
         );
@@ -68,14 +65,13 @@ public class ZooEngineService {
                 auCount
         );
 
-        List<ScenarioTestResultDto> scenarioErrors =
-                this.runMonkeyTest(scenarios);
+        this.runMonkeyTest(scenarios);
 
         publishEvent(null, "======== FINISH ========");
 
         return new ZooEngineResponseDto(
                 scenarios,
-                scenarioErrors
+                this.errorCollectorService.getErrors()
         );
     }
 
@@ -85,7 +81,6 @@ public class ZooEngineService {
         AnalyzedAppIdeaDto result = analyzeAppIdeaService.analyze(appDocument);
 
         publishEvent(result, "//First step completed");
-        //log.debug("//AnalyzedAppIdeaDto: {}", result);
 
         return result;
     }
@@ -102,30 +97,9 @@ public class ZooEngineService {
         );
 
         publishEvent(result, "//Second step completed");
-        //log.debug("//AnalyzedAppTasksDto: {}", result);
 
         return result;
     }
-
-//    private AnalyzedPagesDto analyzeUserExperience(
-//            List<String> pagesDocuments,
-//            AnalyzedAppIdeaDto analyzedAppIdeaDto,
-//            AnalyzedTasksDto analyzedAppTasksDto
-//    ) {
-//        publishEvent(null, "//Launching third step...");
-//
-//        AnalyzedPagesDto result = analyzeUserExperienceService.analyze(
-//                pagesDocuments,
-//                analyzedAppIdeaDto,
-//                analyzedAppTasksDto
-//        );
-//
-//        publishEvent(result, "//Third step completed");
-//        //log.debug("//AnalyzedPagesDto: {}", result);
-//
-//        return result;
-//    }
-
     private AnalyzedPagesDto analyzeAppPages(
             List<PageDto> pages
     ) {
@@ -163,19 +137,17 @@ public class ZooEngineService {
         return scenarios;
     }
 
-    private List<ScenarioTestResultDto> runMonkeyTest(
+    private void runMonkeyTest(
             List<ChaosScenarioDto> chaosScenarios
     ) {
         publishEvent(null, "//Launching fifth step...");
 
-        List<ScenarioTestResultDto> scenariosResults = this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios);
+        this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios);
 
         publishEvent(
-                scenariosResults,
-                "//Fifth step completed. Executed %s scenarios".formatted(scenariosResults.size())
+                null,
+                "//Fifth step completed. Executed %s scenarios".formatted(chaosScenarios.size())
         );
-
-        return scenariosResults;
     }
 
     private <T> void publishEvent(T data, String message) {

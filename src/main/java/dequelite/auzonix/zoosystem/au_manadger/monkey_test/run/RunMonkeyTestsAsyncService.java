@@ -26,13 +26,13 @@ public class RunMonkeyTestsAsyncService {
 
     private final EventDispatcher eventDispatcher;
 
-    public List<ScenarioTestResultDto> runMonkeyTestsAsync(
+    public void runMonkeyTestsAsync(
             List<ChaosScenarioDto> chaosScenarios
     ) {
-        List<CompletableFuture<ScenarioTestResultDto>> futures = chaosScenarios
+        List<CompletableFuture<Void>> futures = chaosScenarios
                 .stream()
                 .map(scenario ->
-                        CompletableFuture.supplyAsync(() -> {
+                        CompletableFuture.runAsync(() -> {
                             eventDispatcher.publish(
                                     new SystemEventDto<>(
                                             RunMonkeyTestsAsyncService.class,
@@ -41,31 +41,15 @@ public class RunMonkeyTestsAsyncService {
                                     )
                             );
 
-                            List<ConsoleErrorDto> consoleErrors = this.runMonkeyTestService.run(
+                           this.runMonkeyTestService.run(
                                     scenario
                             );
 
-                            eventDispatcher.publish(
-                                    new SystemEventDto<>(
-                                            RunMonkeyTestsAsyncService.class,
-                                            null,
-                                            "Scenario %s completed with %s errors".formatted(scenario.id(), consoleErrors.size())
-                                    )
-                            );
-
-                            return  new ScenarioTestResultDto(
-                                    scenario.id(),
-                                    consoleErrors
-                            );
                         }, executorService)
                 ).toList();
 
         CompletableFuture.allOf(
                 futures.toArray(new CompletableFuture<?>[0])
         ).join();
-
-        return futures.stream()
-                .map(CompletableFuture::join)
-                .collect(Collectors.toList());
     }
 }

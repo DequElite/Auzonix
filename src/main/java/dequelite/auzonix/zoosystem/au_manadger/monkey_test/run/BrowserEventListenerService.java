@@ -2,6 +2,8 @@ package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
 import com.microsoft.playwright.Page;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.error_collector.dto.ErrorType;
+import dequelite.auzonix.zoosystem.error_collector.dto.TestErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import lombok.RequiredArgsConstructor;
@@ -16,54 +18,57 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BrowserEventListenerService {
     private final EventDispatcher eventDispatcher;
 
-    public void register(List<ConsoleErrorDto> consoleErrors, Page page, AtomicInteger currentStepNumber) {
+    public void register(List<TestErrorDto> errors, Page page, AtomicInteger currentStepNumber) {
         page.onConsoleMessage(msg -> {
             publishEvent(null, "DEBUG [BROWSER step=%d] console.%s: %s"
                     .formatted(currentStepNumber.get(), msg.type(), msg.text()));
 
             if (msg.type().equals("error")) {
-                ConsoleErrorDto consoleError = new ConsoleErrorDto(
-                        currentStepNumber.get(),
-                        msg.text()
+                TestErrorDto errorDto = new TestErrorDto(
+                    ErrorType.CONSOLE,
+                    currentStepNumber.get(),
+                    null,
+                    msg.text()
                 );
 
-                consoleErrors.add(consoleError);
+                errors.add(errorDto);
 
-                publishEvent(consoleError, "WARN [BROWSER step=%d] console.error: %s"
+                publishEvent(errors, "WARN [BROWSER step=%d] console.error: %s"
                         .formatted(currentStepNumber.get(), msg.text()));
             }
         });
 
-        page.onPageError(err ->
-                publishEvent(null, "WARN [BROWSER step=%d] uncaught page error: %s"
-                        .formatted(currentStepNumber.get(), err)));
+        page.onPageError(err -> {
+            TestErrorDto errorDto = new TestErrorDto(
+                    ErrorType.PAGE,
+                    currentStepNumber.get(),
+                    null,
+                    err
+            );
 
-        page.onResponse(resp ->
-                publishEvent(null, "WARN [HTTP step=%d] %s %s -> %d"
-                        .formatted(
-                                currentStepNumber.get(),
-                                resp.request().method(),
-                                resp.url(),
-                                resp.status()
-                        )));
+            errors.add(errorDto);
 
-        page.onFrameNavigated(frame -> {
-            if (frame == page.mainFrame()) {
-                publishEvent(null, "INFO [NAV step=%d] navigated to %s"
-                        .formatted(currentStepNumber.get(), frame.url()));
-            }
+            publishEvent(null, "WARN [BROWSER step=%d] uncaught page error: %s"
+                    .formatted(currentStepNumber.get(), err));
         });
 
         page.onRequestFailed(request -> {
-            String message = "Network request failed: "
+            String msg = "Network request failed: "
                     + request.method() + " "
                     + request.url()
                     + " | reason=" + request.failure();
 
-            consoleErrors.add(new ConsoleErrorDto(
+            TestErrorDto errorDto = new TestErrorDto(
+                    ErrorType.HTTP,
                     currentStepNumber.get(),
-                    message
-            ));
+                    null,
+                    msg
+            );
+
+            errors.add(errorDto);
+
+            publishEvent(null, "WARN [HTTP step=%d] request failed: %s"
+                    .formatted(currentStepNumber.get(), msg));
         });
     }
 

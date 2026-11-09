@@ -2,9 +2,15 @@ package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
+import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowserDiscoveryService;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AttributesDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.Role;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
+import dequelite.auzonix.zoosystem.error_collector.dto.ErrorType;
+import dequelite.auzonix.zoosystem.error_collector.dto.MonkeyTestErrorDto;
+import dequelite.auzonix.zoosystem.error_collector.dto.SystemErrorDto;
+import dequelite.auzonix.zoosystem.error_collector.dto.TestErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChSStepDto;
@@ -14,6 +20,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -26,8 +33,12 @@ public class RunMonkeyTestService {
     private final ActService actService;
     private final BrowserEventListenerService browserEventListenerService;
 
-    public List<ConsoleErrorDto> run(ChaosScenarioDto chaosScenario) {
-        List<ConsoleErrorDto> consoleErrors = new ArrayList<>();
+    private final ErrorCollectorService errorCollectorService;
+
+    public void run(ChaosScenarioDto chaosScenario) {
+        List<TestErrorDto> errors = new ArrayList<>();
+        UUID testId = UUID.randomUUID();
+
         AtomicInteger currentStepNumber = new AtomicInteger(0);
         int totalSteps = chaosScenario.steps().size();
         long scenarioStart = System.currentTimeMillis();
@@ -49,7 +60,7 @@ public class RunMonkeyTestService {
             try (BrowserContext browserContext = browser.newContext()) {
                 try (Page page = browserContext.newPage()) {
                     this.browserEventListenerService.register(
-                            consoleErrors,
+                            errors,
                             page,
                             currentStepNumber
                     );
@@ -78,14 +89,16 @@ public class RunMonkeyTestService {
                                 step,
                                 page,
                                 role,
-                                totalSteps
+                                totalSteps,
+                                errors
                         );
 
                         this.actService.actElement(
                                 step,
                                 locator,
                                 totalSteps,
-                                role
+                                role,
+                                errors
                         );
 
                     }
@@ -97,18 +110,36 @@ public class RunMonkeyTestService {
                                     chaosScenario.id(),
                                     currentStepNumber.get(),
                                     totalSteps,
-                                    consoleErrors.size(),
+                                    errors.size(),
                                     System.currentTimeMillis() - scenarioStart,
                                     page.url()
                             ));
 
-                    return consoleErrors;
+                    this.errorCollectorService.addTestErrors(
+                        testId,
+                            new MonkeyTestErrorDto(
+                                    errors,
+                                    chaosScenario.id()
+                            )
+                    );
                 }
             }
         } catch (Exception e) {
-            String reason = e.getMessage() == null
-                    ? "unknown"
-                    : e.getMessage().lines().findFirst().orElse("unknown");
+            String reason = e.getMessage();
+
+            errors.add(
+                    new TestErrorDto(
+                            ErrorType.PLAYWRIGHT,
+                            currentStepNumber.get(),
+                            e,
+                            "ERROR [SCENARIO] FAILED at step %d/%d| reason: %s"
+                                    .formatted(
+                                            currentStepNumber.get(),
+                                            totalSteps,
+                                            reason
+                                    )
+                    )
+            );
 
             publishEvent(null, "ERROR [SCENARIO] FAILED at step %d/%d after %d ms | reason: %s"
                     .formatted(
@@ -118,7 +149,13 @@ public class RunMonkeyTestService {
                             reason
                     ));
 
-            return consoleErrors;
+            this.errorCollectorService.addTestErrors(
+                    testId,
+                    new MonkeyTestErrorDto(
+                            errors,
+                            chaosScenario.id()
+                    )
+            );
         }
     }
 
