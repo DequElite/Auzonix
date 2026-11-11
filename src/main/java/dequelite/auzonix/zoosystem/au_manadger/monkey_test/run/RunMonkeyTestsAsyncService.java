@@ -1,6 +1,7 @@
 package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
@@ -27,7 +28,8 @@ public class RunMonkeyTestsAsyncService {
     private final EventDispatcher eventDispatcher;
 
     public void runMonkeyTestsAsync(
-            List<ChaosScenarioDto> chaosScenarios
+            List<ChaosScenarioDto> chaosScenarios,
+            BrowserSettings browserSettings
     ) {
         List<CompletableFuture<Void>> futures = chaosScenarios
                 .stream()
@@ -42,7 +44,7 @@ public class RunMonkeyTestsAsyncService {
                             );
 
                            this.runMonkeyTestService.run(
-                                    scenario
+                                    scenario, browserSettings
                             );
 
                         }, executorService)

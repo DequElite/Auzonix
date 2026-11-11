@@ -4,6 +4,9 @@ import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
 import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.*;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSession;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
+import dequelite.auzonix.zoosystem.browser_manadger.factory.BrowserFactory;
 import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
 import dequelite.auzonix.zoosystem.error_collector.dto.SystemErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
@@ -21,6 +24,8 @@ import java.util.Map;
 public class AnalyzeBrowserDiscoveryService {
     private final EventDispatcher eventDispatcher;
     private final ErrorCollectorService errorCollectorService;
+
+    private final BrowserFactory browserFactory;
 
     private final Map<Role, AriaRole> rolesToFind = Map.ofEntries(
             Map.entry(Role.BUTTON, AriaRole.BUTTON),
@@ -48,26 +53,22 @@ public class AnalyzeBrowserDiscoveryService {
             Role.OPTION, List.of(ActionType.SELECTOPTION)
     );
 
-    public AnalyzedPagesDto analyze(List<PageDto> pages) {
+    public AnalyzedPagesDto analyze(List<PageDto> pages, BrowserSettings browserSettings) {
         List<AnalyzedAppPageDto> analyzedPages = new ArrayList<>();
 
-        try (Playwright playwright = Playwright.create()) {
-            Browser browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions()
-                            .setHeadless(false)
-            );
 
-            try (BrowserContext browserContext = browser.newContext()) {
+        try (BrowserSession browserSession = browserFactory.createSession(browserSettings)) {
+            BrowserContext browserContext = browserSession.context();
 
-                for (PageDto pageDto : pages) {
-                    analyzedPages.add(analyzePage(pageDto, browserContext));
-                }
-
-                publishEvent(null, "INFO Browser has been discovered: %s"
-                        .formatted(analyzedPages));
-
-                return new AnalyzedPagesDto(analyzedPages);
+            for (PageDto pageDto : pages) {
+                analyzedPages.add(analyzePage(pageDto, browserContext));
             }
+
+            publishEvent(null, "INFO Browser has been discovered: %s"
+                    .formatted(analyzedPages));
+
+            return new AnalyzedPagesDto(analyzedPages);
+
         } catch (Exception e) {
             String reason = e.getMessage();
 

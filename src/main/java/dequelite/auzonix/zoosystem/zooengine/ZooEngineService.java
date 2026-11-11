@@ -9,6 +9,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowser
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
@@ -43,7 +44,8 @@ public class ZooEngineService {
     public ZooEngineResponseDto start(
             String appDocument,
             List<PageDto> pagesDocuments,
-            Integer auCount
+            Integer auCount,
+            BrowserSettings browserSettings
     ) {
         publishEvent(null, "======== START ========");
 
@@ -55,7 +57,7 @@ public class ZooEngineService {
         );
 
         AnalyzedPagesDto analyzedAppPageDtos = analyzeAppPages(
-                pagesDocuments
+                pagesDocuments, browserSettings
         );
 
         List<ChaosScenarioDto> scenarios = generateChaosScenarios(
@@ -65,7 +67,7 @@ public class ZooEngineService {
                 auCount
         );
 
-        this.runMonkeyTest(scenarios);
+        this.runMonkeyTest(scenarios, browserSettings);
 
         publishEvent(null, "======== FINISH ========");
 
@@ -101,12 +103,14 @@ public class ZooEngineService {
         return result;
     }
     private AnalyzedPagesDto analyzeAppPages(
-            List<PageDto> pages
+            List<PageDto> pages,
+            BrowserSettings browserSettings
     ) {
         publishEvent(null, "//Launching third step...");
 
         AnalyzedPagesDto result = this.analyzeBrowserDiscoveryService.analyze(
-                pages
+                pages, browserSettings
+
         );
 
         publishEvent(result, "//Third step completed");
@@ -138,11 +142,13 @@ public class ZooEngineService {
     }
 
     private void runMonkeyTest(
-            List<ChaosScenarioDto> chaosScenarios
+            List<ChaosScenarioDto> chaosScenarios,
+            BrowserSettings browserSettings
+
     ) {
         publishEvent(null, "//Launching fifth step...");
 
-        this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios);
+        this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios, browserSettings);
 
         publishEvent(
                 null,

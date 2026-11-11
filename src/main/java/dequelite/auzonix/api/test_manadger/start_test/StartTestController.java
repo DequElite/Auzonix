@@ -25,7 +25,8 @@ public class StartTestController {
         ZooEngineResponseDto zooEngineResponse = this.zooEngineService.start(
                 body.getAppDocument(),
                 body.getPagesDocuments(),
-                body.getAuCount()
+                body.getAuCount(),
+                body.getBrowserSettings()
         );
 
         StartTestResponseDto response = new StartTestResponseDto(zooEngineResponse);

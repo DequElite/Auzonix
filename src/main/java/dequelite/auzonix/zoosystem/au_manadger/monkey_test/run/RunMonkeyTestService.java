@@ -6,6 +6,9 @@ import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowser
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AttributesDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.Role;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSession;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
+import dequelite.auzonix.zoosystem.browser_manadger.factory.BrowserFactory;
 import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
 import dequelite.auzonix.zoosystem.error_collector.dto.ErrorType;
 import dequelite.auzonix.zoosystem.error_collector.dto.MonkeyTestErrorDto;
@@ -35,7 +38,9 @@ public class RunMonkeyTestService {
 
     private final ErrorCollectorService errorCollectorService;
 
-    public void run(ChaosScenarioDto chaosScenario) {
+    private final BrowserFactory browserFactory;
+
+    public void run(ChaosScenarioDto chaosScenario, BrowserSettings browserSettings) {
         List<TestErrorDto> errors = new ArrayList<>();
         UUID testId = UUID.randomUUID();
 
@@ -51,78 +56,72 @@ public class RunMonkeyTestService {
                         totalSteps
                 ));
 
-        try (Playwright playwright = Playwright.create()) {
-            Browser browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions()
-                            .setHeadless(false)
-            );
+        try (BrowserSession browserSession = browserFactory.createSession(browserSettings)) {
+            BrowserContext browserContext = browserSession.context();
+            try (Page page = browserContext.newPage()) {
+                this.browserEventListenerService.register(
+                        errors,
+                        page,
+                        currentStepNumber
+                );
 
-            try (BrowserContext browserContext = browser.newContext()) {
-                try (Page page = browserContext.newPage()) {
-                    this.browserEventListenerService.register(
-                            errors,
-                            page,
-                            currentStepNumber
-                    );
+                page.navigate(chaosScenario.targetUrl());
 
-                    page.navigate(chaosScenario.targetUrl());
+                publishEvent(null, "INFO [NAV] opened %s (title='%s')"
+                        .formatted(page.url(), page.title()));
 
-                    publishEvent(null, "INFO [NAV] opened %s (title='%s')"
-                            .formatted(page.url(), page.title()));
+                for (ChSStepDto step : chaosScenario.steps()) {
+                    currentStepNumber.set(step.stepNumber());
 
-                    for (ChSStepDto step : chaosScenario.steps()) {
-                        currentStepNumber.set(step.stepNumber());
-
-                        publishEvent(null, "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
-                                .formatted(
-                                        step.stepNumber(),
-                                        totalSteps,
-                                        step.action(),
-                                        step.targetElement().id(),
-                                        step.targetElement().role(),
-                                        step.fillValue()
-                                ));
-
-                        AriaRole role = this.getAriaRole(step.targetElement().role());
-
-                        Locator locator = this.locatorService.locateElement(
-                                step,
-                                page,
-                                role,
-                                totalSteps,
-                                errors
-                        );
-
-                        this.actService.actElement(
-                                step,
-                                locator,
-                                totalSteps,
-                                role,
-                                errors
-                        );
-
-                    }
-
-                    page.waitForTimeout(2000);
-
-                    publishEvent(null, "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
+                    publishEvent(null, "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
                             .formatted(
-                                    chaosScenario.id(),
-                                    currentStepNumber.get(),
+                                    step.stepNumber(),
                                     totalSteps,
-                                    errors.size(),
-                                    System.currentTimeMillis() - scenarioStart,
-                                    page.url()
+                                    step.action(),
+                                    step.targetElement().id(),
+                                    step.targetElement().role(),
+                                    step.fillValue()
                             ));
 
-                    this.errorCollectorService.addTestErrors(
-                        testId,
-                            new MonkeyTestErrorDto(
-                                    errors,
-                                    chaosScenario.id()
-                            )
+                    AriaRole role = this.getAriaRole(step.targetElement().role());
+
+                    Locator locator = this.locatorService.locateElement(
+                            step,
+                            page,
+                            role,
+                            totalSteps,
+                            errors
                     );
+
+                    this.actService.actElement(
+                            step,
+                            locator,
+                            totalSteps,
+                            role,
+                            errors
+                    );
+
                 }
+
+                page.waitForTimeout(2000);
+
+                publishEvent(null, "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
+                        .formatted(
+                                chaosScenario.id(),
+                                currentStepNumber.get(),
+                                totalSteps,
+                                errors.size(),
+                                System.currentTimeMillis() - scenarioStart,
+                                page.url()
+                        ));
+
+                this.errorCollectorService.addTestErrors(
+                    testId,
+                        new MonkeyTestErrorDto(
+                                errors,
+                                chaosScenario.id()
+                        )
+                );
             }
         } catch (Exception e) {
             String reason = e.getMessage();

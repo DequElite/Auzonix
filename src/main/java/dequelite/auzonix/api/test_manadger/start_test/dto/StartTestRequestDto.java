@@ -1,6 +1,7 @@
 package dequelite.auzonix.api.test_manadger.start_test.dto;
 
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
+import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import lombok.Getter;
@@ -23,4 +24,6 @@ public class StartTestRequestDto {
     @NotNull(message = "AU count must not be null")
     @Positive(message = "AU count must be greater than zero")
     private Integer auCount;
+
+    private BrowserSettings browserSettings;
 }
