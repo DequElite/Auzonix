@@ -15,6 +15,7 @@ import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateChaosScenarioService;
+import dequelite.auzonix.zoosystem.text_formatters.MarkdownTextFormatter;
 import dequelite.auzonix.zoosystem.zooengine.dto.ScenarioTestResultDto;
 import dequelite.auzonix.zoosystem.zooengine.dto.ZooEngineResponseDto;
 import lombok.RequiredArgsConstructor;
@@ -49,10 +50,12 @@ public class ZooEngineService {
     ) {
         publishEvent(null, "======== START ========");
 
-        AnalyzedAppIdeaDto analyzedAppIdeaDto = analyzeAppIdea(appDocument);
+        String formattedAppDocument = MarkdownTextFormatter.of(appDocument);
+
+        AnalyzedAppIdeaDto analyzedAppIdeaDto = analyzeAppIdea(formattedAppDocument);
 
         AnalyzedTasksDto analyzedAppTasksDto = analyzeAppTasks(
-                appDocument,
+                formattedAppDocument,
                 analyzedAppIdeaDto
         );
 

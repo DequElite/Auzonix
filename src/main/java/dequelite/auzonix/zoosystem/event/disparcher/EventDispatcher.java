@@ -3,11 +3,13 @@ package dequelite.auzonix.zoosystem.event.disparcher;
 import dequelite.auzonix.zoosystem.event.dto.PublishedEventDto;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.event.handlers.IHandler;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.time.LocalDateTime;
 
+@Service
 public class EventDispatcher {
     private final List<IHandler> handlers;
     private final ExecutorService executorService;
