@@ -18,6 +18,8 @@ import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChSStepDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
+import dequelite.auzonix.zoosystem.test_action_collector.dto.MonkeyTestActionDto;
+import dequelite.auzonix.zoosystem.test_action_collector.dto.TestActionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -48,13 +50,20 @@ public class RunMonkeyTestService {
         int totalSteps = chaosScenario.steps().size();
         long scenarioStart = System.currentTimeMillis();
 
-        publishEvent(null, "INFO [SCENARIO] START id=%s name='%s' auType=%s steps=%d"
-                .formatted(
-                        chaosScenario.id(),
-                        chaosScenario.name(),
-                        chaosScenario.auType(),
-                        totalSteps
-                ));
+        publishEvent(new MonkeyTestActionDto(
+                "INFO [SCENARIO] START id=%s name='%s' auType=%s steps=%d"
+                        .formatted(
+                                chaosScenario.id(),
+                                chaosScenario.name(),
+                                chaosScenario.auType(),
+                                totalSteps
+                        ),
+                testId,
+                TestActionType.STARTED,
+                chaosScenario.id(),
+                null,
+                currentStepNumber.get()
+        ));
 
         try (BrowserSession browserSession = browserFactory.createSession(browserSettings)) {
             BrowserContext browserContext = browserSession.context();
@@ -67,21 +76,35 @@ public class RunMonkeyTestService {
 
                 page.navigate(chaosScenario.targetUrl());
 
-                publishEvent(null, "INFO [NAV] opened %s (title='%s')"
-                        .formatted(page.url(), page.title()));
+                publishEvent(new MonkeyTestActionDto(
+                        "INFO [NAV] opened %s (title='%s')"
+                                .formatted(page.url(), page.title()),
+                        testId,
+                        TestActionType.NAVIGATED,
+                        chaosScenario.id(),
+                        null,
+                        currentStepNumber.get()
+                ));
 
                 for (ChSStepDto step : chaosScenario.steps()) {
                     currentStepNumber.set(step.stepNumber());
 
-                    publishEvent(null, "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
-                            .formatted(
-                                    step.stepNumber(),
-                                    totalSteps,
-                                    step.action(),
-                                    step.targetElement().id(),
-                                    step.targetElement().role(),
-                                    step.fillValue()
-                            ));
+                    publishEvent(new MonkeyTestActionDto(
+                            "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
+                                    .formatted(
+                                            step.stepNumber(),
+                                            totalSteps,
+                                            step.action(),
+                                            step.targetElement().id(),
+                                            step.targetElement().role(),
+                                            step.fillValue()
+                                    ),
+                            testId,
+                            TestActionType.STEP_STARTED,
+                            chaosScenario.id(),
+                            step,
+                            currentStepNumber.get()
+                    ));
 
                     AriaRole role = this.getAriaRole(step.targetElement().role());
 
@@ -98,22 +121,32 @@ public class RunMonkeyTestService {
                             locator,
                             totalSteps,
                             role,
-                            errors
+                            errors,
+                            chaosScenario.id(),
+                            testId,
+                            currentStepNumber.get()
                     );
 
                 }
 
                 page.waitForTimeout(2000);
 
-                publishEvent(null, "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
-                        .formatted(
-                                chaosScenario.id(),
-                                currentStepNumber.get(),
-                                totalSteps,
-                                errors.size(),
-                                System.currentTimeMillis() - scenarioStart,
-                                page.url()
-                        ));
+                publishEvent(new MonkeyTestActionDto(
+                        "INFO [SCENARIO] FINISHED id=%s steps=%d/%d consoleErrors=%d total=%d ms | final url=%s"
+                                .formatted(
+                                        chaosScenario.id(),
+                                        currentStepNumber.get(),
+                                        totalSteps,
+                                        errors.size(),
+                                        System.currentTimeMillis() - scenarioStart,
+                                        page.url()
+                                ),
+                        testId,
+                        TestActionType.FINISHED,
+                        chaosScenario.id(),
+                        null,
+                        currentStepNumber.get()
+                ));
 
                 this.errorCollectorService.addTestErrors(
                     testId,
@@ -140,13 +173,19 @@ public class RunMonkeyTestService {
                     )
             );
 
-            publishEvent(null, "ERROR [SCENARIO] FAILED at step %d/%d after %d ms | reason: %s"
-                    .formatted(
-                            currentStepNumber.get(),
-                            totalSteps,
-                            System.currentTimeMillis() - scenarioStart,
-                            reason
-                    ));
+            eventDispatcher.publish(
+                    new SystemEventDto<>(
+                            RunMonkeyTestService.class,
+                            null,
+                            "ERROR [SCENARIO] FAILED at step %d/%d after %d ms | reason: %s"
+                                    .formatted(
+                                            currentStepNumber.get(),
+                                            totalSteps,
+                                            System.currentTimeMillis() - scenarioStart,
+                                            reason
+                                    )
+                    )
+            );
 
             this.errorCollectorService.addTestErrors(
                     testId,
@@ -176,12 +215,12 @@ public class RunMonkeyTestService {
         };
     }
 
-    private <T> void publishEvent(T data, String message) {
+    private void publishEvent(MonkeyTestActionDto monkeyTestActionDto) {
         eventDispatcher.publish(
                 new SystemEventDto<>(
                         RunMonkeyTestService.class,
-                        data,
-                        message
+                        monkeyTestActionDto,
+                        monkeyTestActionDto.message()
                 )
         );
     }

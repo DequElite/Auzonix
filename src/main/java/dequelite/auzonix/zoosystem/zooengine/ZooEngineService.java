@@ -15,6 +15,7 @@ import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateChaosScenarioService;
+import dequelite.auzonix.zoosystem.test_action_collector.TestActionCollectorService;
 import dequelite.auzonix.zoosystem.text_formatters.MarkdownTextFormatter;
 import dequelite.auzonix.zoosystem.zooengine.dto.ScenarioTestResultDto;
 import dequelite.auzonix.zoosystem.zooengine.dto.ZooEngineResponseDto;
@@ -41,6 +42,7 @@ public class ZooEngineService {
     private final EventDispatcher eventDispatcher;
 
     private final ErrorCollectorService errorCollectorService;
+    private final TestActionCollectorService testActionCollectorService;
 
     public ZooEngineResponseDto start(
             String appDocument,
@@ -76,7 +78,8 @@ public class ZooEngineService {
 
         return new ZooEngineResponseDto(
                 scenarios,
-                this.errorCollectorService.getErrors()
+                this.errorCollectorService.getErrors(),
+                this.testActionCollectorService.getActions()
         );
     }
 

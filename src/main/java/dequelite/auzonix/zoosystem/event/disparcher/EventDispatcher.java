@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.time.LocalDateTime;
 
-@Service
 public class EventDispatcher {
     private final List<IHandler> handlers;
     private final ExecutorService executorService;
