@@ -27,7 +27,6 @@ public class BrowserEventListenerService {
                 TestErrorDto errorDto = new TestErrorDto(
                     ErrorType.CONSOLE,
                     currentStepNumber.get(),
-                    null,
                     msg.text()
                 );
 
@@ -42,7 +41,6 @@ public class BrowserEventListenerService {
             TestErrorDto errorDto = new TestErrorDto(
                     ErrorType.PAGE,
                     currentStepNumber.get(),
-                    null,
                     err
             );
 
@@ -61,7 +59,6 @@ public class BrowserEventListenerService {
             TestErrorDto errorDto = new TestErrorDto(
                     ErrorType.HTTP,
                     currentStepNumber.get(),
-                    null,
                     msg
             );
 

@@ -33,7 +33,6 @@ public class ActService {
                             testId,
                             TestActionType.ACTION_ON_ELEMENT,
                             scenarioId,
-                            step,
                             currentStepNumber
                     ));
                 }
@@ -47,7 +46,6 @@ public class ActService {
                             testId,
                             TestActionType.ACTION_ON_ELEMENT,
                             scenarioId,
-                            step,
                             currentStepNumber
                     ));
                 }
@@ -61,7 +59,6 @@ public class ActService {
                             testId,
                             TestActionType.ACTION_ON_ELEMENT,
                             scenarioId,
-                            step,
                             currentStepNumber
                     ));
                 }
@@ -75,7 +72,6 @@ public class ActService {
                             testId,
                             TestActionType.ACTION_ON_ELEMENT,
                             scenarioId,
-                            step,
                             currentStepNumber
                     ));
                 }
@@ -99,7 +95,6 @@ public class ActService {
                                 testId,
                                 TestActionType.ACTION_ON_ELEMENT,
                                 scenarioId,
-                                step,
                                 currentStepNumber
                         ));
                     } else {
@@ -122,7 +117,6 @@ public class ActService {
                     new TestErrorDto(
                             ErrorType.PLAYWRIGHT,
                             step.stepNumber(),
-                            e,
                             "Error during act element"
                     )
             );

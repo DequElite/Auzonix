@@ -48,7 +48,6 @@ public class LocatorService {
             TestErrorDto errorDto = new TestErrorDto(
                     ErrorType.PLAYWRIGHT,
                     step.stepNumber(),
-                    exception,
                     "Element search failed: %s: %s"
                             .formatted(
                                     exception.getClass().getSimpleName(),

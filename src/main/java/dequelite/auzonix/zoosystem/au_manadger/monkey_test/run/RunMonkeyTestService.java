@@ -61,7 +61,6 @@ public class RunMonkeyTestService {
                 testId,
                 TestActionType.STARTED,
                 chaosScenario.id(),
-                null,
                 currentStepNumber.get()
         ));
 
@@ -82,7 +81,6 @@ public class RunMonkeyTestService {
                         testId,
                         TestActionType.NAVIGATED,
                         chaosScenario.id(),
-                        null,
                         currentStepNumber.get()
                 ));
 
@@ -102,7 +100,6 @@ public class RunMonkeyTestService {
                             testId,
                             TestActionType.STEP_STARTED,
                             chaosScenario.id(),
-                            step,
                             currentStepNumber.get()
                     ));
 
@@ -144,7 +141,6 @@ public class RunMonkeyTestService {
                         testId,
                         TestActionType.FINISHED,
                         chaosScenario.id(),
-                        null,
                         currentStepNumber.get()
                 ));
 
@@ -163,7 +159,6 @@ public class RunMonkeyTestService {
                     new TestErrorDto(
                             ErrorType.PLAYWRIGHT,
                             currentStepNumber.get(),
-                            e,
                             "ERROR [SCENARIO] FAILED at step %d/%d| reason: %s"
                                     .formatted(
                                             currentStepNumber.get(),

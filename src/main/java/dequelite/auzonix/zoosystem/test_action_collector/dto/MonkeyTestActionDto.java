@@ -9,7 +9,6 @@ public record MonkeyTestActionDto (
         UUID testId,
         TestActionType type,
         UUID scenarioId,
-        ChSStepDto step,
         Integer stepNumber
 ) {
 }
