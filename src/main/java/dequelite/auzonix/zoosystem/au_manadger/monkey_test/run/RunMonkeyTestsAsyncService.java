@@ -1,5 +1,11 @@
 package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
 import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
@@ -27,10 +33,21 @@ public class RunMonkeyTestsAsyncService {
 
     private final EventDispatcher eventDispatcher;
 
+    private final SecondAuLevelType secondAuLevelType;
+    private final FirstAuLevelType firstAuLevelType;
+
     public void runMonkeyTestsAsync(
             List<ChaosScenarioDto> chaosScenarios,
-            BrowserSettings browserSettings
+            BrowserSettings browserSettings,
+            PageDto pageDto,
+            AnalyzedAppPageDto analyzedAppPage,
+            AnalyzedAppIdeaDto appIdeaAnalysis
     ) {
+        List<AuTypeDto> auTypes = List.of(
+                firstAuLevelType.getAuType(),
+                secondAuLevelType.getAuType()
+        );
+
         List<CompletableFuture<Void>> futures = chaosScenarios
                 .stream()
                 .map(scenario ->
@@ -44,7 +61,13 @@ public class RunMonkeyTestsAsyncService {
                             );
 
                            this.runMonkeyTestService.run(
-                                    scenario, browserSettings
+                                    scenario, browserSettings,
+                                   pageDto,
+                                   analyzedAppPage,
+                                   appIdeaAnalysis,
+                                   auTypes.stream()
+                                           .filter(au -> au.id().equals(scenario.auType()))
+                                           .findFirst().orElse(firstAuLevelType.getAuType())
                             );
 
                         }, executorService)

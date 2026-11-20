@@ -9,6 +9,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowser
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
 import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import dequelite.auzonix.zoosystem.error_collector.ErrorCollectorService;
@@ -73,7 +74,12 @@ public class ZooEngineService {
                 auCount
         );
 
-        this.runMonkeyTest(scenarios, browserSettings);
+        this.runMonkeyTest(
+                scenarios, browserSettings,
+                page,
+                analyzedAppPage,
+                analyzedAppIdeaDto
+        );
 
         publishEvent(null, "======== FINISH ========");
 
@@ -150,12 +156,19 @@ public class ZooEngineService {
 
     private void runMonkeyTest(
             List<ChaosScenarioDto> chaosScenarios,
-            BrowserSettings browserSettings
-
+            BrowserSettings browserSettings,
+            PageDto pageDto,
+            AnalyzedAppPageDto analyzedAppPage,
+            AnalyzedAppIdeaDto appIdeaAnalysis
     ) {
         publishEvent(null, "//Launching fifth step...");
 
-        this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(chaosScenarios, browserSettings);
+        this.runMonkeyTestsAsyncService.runMonkeyTestsAsync(
+                chaosScenarios, browserSettings,
+                pageDto,
+                analyzedAppPage,
+                appIdeaAnalysis
+        );
 
         publishEvent(
                 null,

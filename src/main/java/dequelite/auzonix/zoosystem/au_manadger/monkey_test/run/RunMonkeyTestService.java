@@ -2,10 +2,14 @@ package dequelite.auzonix.zoosystem.au_manadger.monkey_test.run;
 
 import com.microsoft.playwright.*;
 import com.microsoft.playwright.options.AriaRole;
+import dequelite.auzonix.zoosystem.ai.GenerateScenarioIntermediateStepPrompt;
 import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowserDiscoveryService;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.AttributesDto;
-import dequelite.auzonix.zoosystem.app_analyzer.dto.Role;
+import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.CompareAnalyzedPagesService;
+import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.dto.ComparedPagesDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.*;
+import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.ConsoleErrorDto;
+import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.dto.DecidedScenarioDto;
 import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSession;
 import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
 import dequelite.auzonix.zoosystem.browser_manadger.factory.BrowserFactory;
@@ -16,16 +20,16 @@ import dequelite.auzonix.zoosystem.error_collector.dto.SystemErrorDto;
 import dequelite.auzonix.zoosystem.error_collector.dto.TestErrorDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
+import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChSIntermediateStepDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChSStepDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
+import dequelite.auzonix.zoosystem.scenario_manadger.generating.GenerateScenarioIntermediateStepService;
 import dequelite.auzonix.zoosystem.test_action_collector.dto.MonkeyTestActionDto;
 import dequelite.auzonix.zoosystem.test_action_collector.dto.TestActionType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -42,12 +46,33 @@ public class RunMonkeyTestService {
 
     private final BrowserFactory browserFactory;
 
-    public void run(ChaosScenarioDto chaosScenario, BrowserSettings browserSettings) {
+    private final AnalyzeBrowserDiscoveryService analyzeBrowserDiscoveryService;
+    private final CompareAnalyzedPagesService compareAnalyzedPagesService;
+    private final GenerateScenarioIntermediateStepService generateScenarioIntermediateStepService;
+
+    public void run(
+            ChaosScenarioDto chaosScenario,
+            BrowserSettings browserSettings,
+            PageDto pageDto,
+            AnalyzedAppPageDto analyzedAppPage,
+            AnalyzedAppIdeaDto appIdeaAnalysis,
+            AuTypeDto auType
+            ) {
+        List<ChSStepDto> stepsToExecute = new ArrayList<>(chaosScenario.steps());
+        AnalyzedAppPageDto currentPageAnalyze = new AnalyzedAppPageDto(
+                analyzedAppPage.metadata(),
+                analyzedAppPage.elementsCount(),
+                analyzedAppPage.elementsCountByRoles(),
+                analyzedAppPage.elements()
+        );
+
+        List<ChSStepDto> executedSteps = new ArrayList<>();
+
         List<TestErrorDto> errors = new ArrayList<>();
         UUID testId = UUID.randomUUID();
 
         AtomicInteger currentStepNumber = new AtomicInteger(0);
-        int totalSteps = chaosScenario.steps().size();
+        int totalSteps = stepsToExecute.size();
         long scenarioStart = System.currentTimeMillis();
 
         publishEvent(new MonkeyTestActionDto(
@@ -84,8 +109,10 @@ public class RunMonkeyTestService {
                         currentStepNumber.get()
                 ));
 
-                for (ChSStepDto step : chaosScenario.steps()) {
+                for (int i = 0; i < stepsToExecute.size(); i++) {
+                    ChSStepDto step = stepsToExecute.get(i);
                     currentStepNumber.set(step.stepNumber());
+                    executedSteps.add(step);
 
                     publishEvent(new MonkeyTestActionDto(
                             "INFO [STEP %d/%d] %s | id=%s role=%s | value=%s"
@@ -123,6 +150,56 @@ public class RunMonkeyTestService {
                             testId,
                             currentStepNumber.get()
                     );
+
+                    Optional<DecidedScenarioDto> decidedScenario = this.decideNextStep(
+                            browserSettings,
+                            pageDto,
+                            currentPageAnalyze,
+                            testId,
+                            chaosScenario.id(),
+                            currentStepNumber.get(),
+                            appIdeaAnalysis,
+                            auType,
+                            chaosScenario
+                    );
+
+                    if(decidedScenario.isPresent()) {
+                        DecidedScenarioDto decidedScenarioDto = decidedScenario.get();
+                        AnalyzedAppPageDto newAnalyzedPage = decidedScenarioDto.analyzedAppPage();
+                        currentPageAnalyze = new AnalyzedAppPageDto(
+                            newAnalyzedPage.metadata(),
+                            newAnalyzedPage.elementsCount(),
+                            newAnalyzedPage.elementsCountByRoles(),
+                            newAnalyzedPage.elements()
+                        );
+
+                        if(decidedScenarioDto.chSIntermediateStep().cutScenario()) {
+                            stepsToExecute.clear();
+                            stepsToExecute.addAll(executedSteps);
+                            stepsToExecute.add(decidedScenarioDto.chSIntermediateStep().step());
+                        } else {
+                            int insertIndex = executedSteps.size();
+
+                            ChSStepDto newStep = decidedScenarioDto.chSIntermediateStep().step();
+
+                            stepsToExecute.add(insertIndex, newStep);
+
+                            for (int j = insertIndex; j < stepsToExecute.size(); j++) {
+                                ChSStepDto oldStep = stepsToExecute.get(j);
+
+                                stepsToExecute.set(
+                                        j,
+                                        new ChSStepDto(
+                                                j + 1,
+                                                oldStep.purpose(),
+                                                oldStep.action(),
+                                                oldStep.fillValue(),
+                                                oldStep.targetElement()
+                                        )
+                                );
+                            }
+                        }
+                    }
 
                 }
 
@@ -190,6 +267,93 @@ public class RunMonkeyTestService {
                     )
             );
         }
+    }
+
+    private Optional<DecidedScenarioDto> decideNextStep(
+            BrowserSettings browserSettings,
+            PageDto pageDto,
+            AnalyzedAppPageDto prevAnalyze,
+            UUID testId,
+            UUID scenarioId,
+            int currentStepNumber,
+            AnalyzedAppIdeaDto appIdeaAnalysis,
+            AuTypeDto auType,
+            ChaosScenarioDto prevScenario
+    ) {
+        publishEvent(new MonkeyTestActionDto(
+                "INFO [SCENARIO]  DECIDING NEXT STEP id=%s steps=%d"
+                        .formatted(
+                                scenarioId,
+                                currentStepNumber
+                        ),
+                testId,
+                TestActionType.DECIDING_NEXT_STEP,
+                scenarioId,
+                currentStepNumber
+        ));
+
+        AnalyzedAppPageDto newAnalyzedPage = this.analyzeBrowserDiscoveryService.analyze(pageDto, browserSettings);
+
+        boolean elementsCountChanged = !prevAnalyze.elementsCount().equals(newAnalyzedPage.elementsCount());
+
+        Map<Role, Integer> changedElementsCountByRoles = new HashMap<>();
+
+        for(Map.Entry<Role, Integer> entry : prevAnalyze.elementsCountByRoles().entrySet()) {
+            Role role = entry.getKey();
+            Integer count = entry.getValue();
+
+            Integer newAnalyzeElementCountByRole = newAnalyzedPage.elementsCountByRoles().get(role);
+            if(!newAnalyzeElementCountByRole.equals(count)) {
+                changedElementsCountByRoles.put(role, newAnalyzeElementCountByRole - count);
+            }
+        }
+
+        if(elementsCountChanged || !changedElementsCountByRoles.isEmpty()) {
+            ComparedPagesDto comparedPagesDto = this.compareAnalyzedPagesService.compare(
+                    prevAnalyze,
+                    newAnalyzedPage,
+                    changedElementsCountByRoles
+            );
+
+            publishEvent(new MonkeyTestActionDto(
+                    "INFO [SCENARIO] DECIDED NEW NEXT STEP id=%s steps=%d"
+                            .formatted(
+                                    scenarioId,
+                                    currentStepNumber
+                            ),
+                    testId,
+                    TestActionType.DECIDED_NEW_NEXT_STEP,
+                    scenarioId,
+                    currentStepNumber
+            ));
+
+            return Optional.of(new DecidedScenarioDto(
+                    newAnalyzedPage,
+                    this.generateScenarioIntermediateStepService.generate(
+                            appIdeaAnalysis,
+                            prevAnalyze,
+                            comparedPagesDto,
+                            auType,
+                            prevScenario,
+                            currentStepNumber
+                    )
+            ));
+
+        }
+
+        publishEvent(new MonkeyTestActionDto(
+                "INFO [SCENARIO]  NEW NEXT STEP CANCELED id=%s steps=%d"
+                        .formatted(
+                                scenarioId,
+                                currentStepNumber
+                        ),
+                testId,
+                TestActionType.NEW_NEXT_STEP_CANCELED,
+                scenarioId,
+                currentStepNumber
+        ));
+
+        return Optional.empty();
     }
 
     private AriaRole getAriaRole(Role role) {

@@ -16,7 +16,6 @@ public class CompareAnalyzedPagesService {
     public ComparedPagesDto compare(
             AnalyzedAppPageDto prevAnalyze,
             AnalyzedAppPageDto currentAnalyze,
-            Integer elementsCountChanged,
             Map<Role, Integer> elementsCountChangedByRoles
     ) {
         List<PageElementDto> existingElements = new ArrayList<>();

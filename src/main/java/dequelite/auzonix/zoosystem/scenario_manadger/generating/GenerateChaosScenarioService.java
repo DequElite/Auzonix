@@ -40,7 +40,7 @@ public class GenerateChaosScenarioService {
     private final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
     public List<ChaosScenarioDto> generateChaosScenariosAsync(
-            AnalyzedPagesDto analyzedAppPageDtos,
+            AnalyzedAppPageDto analyzedAppPage,
             AnalyzedAppIdeaDto analyzedAppIdeaDto,
             AnalyzedTasksDto analyzedAppTasksDto,
             Integer auCount
@@ -70,7 +70,7 @@ public class GenerateChaosScenarioService {
                 .map(auType ->
                             CompletableFuture.supplyAsync(() -> {
                                 ChaosScenarioDto scenario = this.generateChaosScenario(
-                                        analyzedAppPageDtos,
+                                        analyzedAppPage,
                                         analyzedAppIdeaDto,
                                         analyzedAppTasksDto,
                                         auType
@@ -88,20 +88,20 @@ public class GenerateChaosScenarioService {
     }
 
     public ChaosScenarioDto generateChaosScenario(
-            AnalyzedPagesDto analyzedPagesDocuments,
+            AnalyzedAppPageDto analyzedPage,
             AnalyzedAppIdeaDto appIdeaAnalysis,
             AnalyzedTasksDto appTasksAnalysis,
             AuTypeDto auType
     ) {
-        AnalyzedAppPageDto mainAnalyzedPage = analyzedPagesDocuments.pages().isEmpty()
-                ? null
-                : analyzedPagesDocuments.pages().getFirst();
-        if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
+//        AnalyzedAppPageDto mainAnalyzedPage = a.pages().isEmpty()
+//                ? null
+//                : analyzedPagesDocuments.pages().getFirst();
+//        if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
 
         ChaosScenarioDto scenario = this.generateChaosScenarioPrompt.analyze(
                 appIdeaAnalysis,
                 appTasksAnalysis.tasks(),
-                mainAnalyzedPage,
+                analyzedPage,
                 auType.id(),
                 auType.name(),
                 auType.domainKnowledge(),
