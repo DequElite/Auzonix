@@ -7,6 +7,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDt
 import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.browser_analyzers.AnalyzeBrowserDiscoveryService;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageDto;
 import dequelite.auzonix.zoosystem.au_manadger.monkey_test.run.RunMonkeyTestsAsyncService;
 import dequelite.auzonix.zoosystem.browser_manadger.dto.BrowserSettings;
@@ -46,7 +47,7 @@ public class ZooEngineService {
 
     public ZooEngineResponseDto start(
             String appDocument,
-            List<PageDto> pagesDocuments,
+            PageDto page,
             Integer auCount,
             BrowserSettings browserSettings
     ) {
@@ -61,12 +62,12 @@ public class ZooEngineService {
                 analyzedAppIdeaDto
         );
 
-        AnalyzedPagesDto analyzedAppPageDtos = analyzeAppPages(
-                pagesDocuments, browserSettings
+        AnalyzedAppPageDto analyzedAppPage = analyzeAppPages(
+                page, browserSettings
         );
 
         List<ChaosScenarioDto> scenarios = generateChaosScenarios(
-                analyzedAppPageDtos,
+                analyzedAppPage,
                 analyzedAppIdeaDto,
                 analyzedAppTasksDto,
                 auCount
@@ -108,14 +109,14 @@ public class ZooEngineService {
 
         return result;
     }
-    private AnalyzedPagesDto analyzeAppPages(
-            List<PageDto> pages,
+    private AnalyzedAppPageDto analyzeAppPages(
+            PageDto page,
             BrowserSettings browserSettings
     ) {
         publishEvent(null, "//Launching third step...");
 
-        AnalyzedPagesDto result = this.analyzeBrowserDiscoveryService.analyze(
-                pages, browserSettings
+        AnalyzedAppPageDto result = this.analyzeBrowserDiscoveryService.analyze(
+                page, browserSettings
 
         );
 
@@ -125,7 +126,7 @@ public class ZooEngineService {
     }
 
     private List<ChaosScenarioDto> generateChaosScenarios(
-            AnalyzedPagesDto analyzedAppPageDtos,
+            AnalyzedAppPageDto analyzedAppPage,
             AnalyzedAppIdeaDto analyzedAppIdeaDto,
             AnalyzedTasksDto analyzedAppTasksDto,
             Integer auCount
@@ -133,7 +134,7 @@ public class ZooEngineService {
         publishEvent(null, "//Launching fourth step...");
 
         List<ChaosScenarioDto> scenarios = this.generateChaosScenarioService.generateChaosScenariosAsync(
-                analyzedAppPageDtos,
+                analyzedAppPage,
                 analyzedAppIdeaDto,
                 analyzedAppTasksDto,
                 auCount

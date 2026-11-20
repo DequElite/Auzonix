@@ -53,21 +53,22 @@ public class AnalyzeBrowserDiscoveryService {
             Role.OPTION, List.of(ActionType.SELECTOPTION)
     );
 
-    public AnalyzedPagesDto analyze(List<PageDto> pages, BrowserSettings browserSettings) {
-        List<AnalyzedAppPageDto> analyzedPages = new ArrayList<>();
-
+    public AnalyzedAppPageDto analyze(PageDto pageDto, BrowserSettings browserSettings) {
+        //List<AnalyzedAppPageDto> analyzedPages = new ArrayList<>();
+        AnalyzedAppPageDto analyzedPage = new AnalyzedAppPageDto(pageDto, 0, Map.of(Role.LINK, 0), List.of());
 
         try (BrowserSession browserSession = browserFactory.createSession(browserSettings)) {
             BrowserContext browserContext = browserSession.context();
 
-            for (PageDto pageDto : pages) {
-                analyzedPages.add(analyzePage(pageDto, browserContext));
-            }
+            //for (PageDto pageDto : pages) {
+            //    analyzedPages.add(analyzePage(pageDto, browserContext));
+            //}
+            analyzedPage = analyzePage(pageDto, browserContext);
 
             publishEvent(null, "INFO Browser has been discovered: %s"
-                    .formatted(analyzedPages));
+                    .formatted(analyzedPage));
 
-            return new AnalyzedPagesDto(analyzedPages);
+            return analyzedPage;
 
         } catch (Exception e) {
             String reason = e.getMessage();
@@ -83,7 +84,7 @@ public class AnalyzeBrowserDiscoveryService {
                     )
             );
 
-            return new AnalyzedPagesDto(analyzedPages);
+            return analyzedPage;
         }
     }
 
@@ -92,15 +93,20 @@ public class AnalyzeBrowserDiscoveryService {
             page.navigate(pageDto.url());
 
             List<PageElementDto> foundElements = new ArrayList<>();
+            Map<Role, Integer> elementsCountByRoles = new HashMap<>();
 
             for (Map.Entry<Role, AriaRole> entry : rolesToFind.entrySet()) {
                 Role role = entry.getKey();
                 AriaRole ariaRole = entry.getValue();
 
                 Locator locator = page.getByRole(ariaRole);
-                int foundLocators = locator.count();
+                int foundLocatorsCount = locator.count();
 
-                for (int i = 0; i < foundLocators; i++) {
+                elementsCountByRoles.put(
+                        role, foundLocatorsCount
+                );
+
+                for (int i = 0; i < foundLocatorsCount; i++) {
                     Locator element = locator.nth(i);
 
                     List<ActionType> actions = availableActions.get(role);
@@ -125,6 +131,8 @@ public class AnalyzeBrowserDiscoveryService {
 
             return new AnalyzedAppPageDto(
                     pageDto,
+                    foundElements.size(),
+                    elementsCountByRoles,
                     foundElements
             );
         }

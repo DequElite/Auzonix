@@ -14,12 +14,15 @@ public class StartTestRequestDto {
     @NotBlank(message = "App document must not be blank")
     private String appDocument;
 
-    @NotNull(message = "Pages documents must not be null")
+    /*@NotNull(message = "Pages documents must not be null")
     @NotEmpty(message = "Pages documents must contain at least one document")
     private List<
             @NotNull(message = "Page document must not be null")
             @Valid PageDto
-            > pagesDocuments;
+            > pagesDocuments;*/
+
+    private @NotNull(message = "Page document must not be null")
+    @Valid PageDto page;
 
     @NotNull(message = "AU count must not be null")
     @Positive(message = "AU count must be greater than zero")
