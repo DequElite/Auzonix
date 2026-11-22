@@ -294,6 +294,12 @@ public class RunMonkeyTestService {
 
         AnalyzedAppPageDto newAnalyzedPage = this.analyzeBrowserDiscoveryService.analyze(pageDto, browserSettings);
 
+        publishEvent(
+                null,
+                "[SCENARIO] Browser discovery completed. Scenario: %s, step: %d."
+                        .formatted(scenarioId, currentStepNumber)
+        );
+
         boolean elementsCountChanged = !prevAnalyze.elementsCount().equals(newAnalyzedPage.elementsCount());
 
         Map<Role, Integer> changedElementsCountByRoles = new HashMap<>();
@@ -308,12 +314,39 @@ public class RunMonkeyTestService {
             }
         }
 
+        publishEvent(
+                null,
+                "[SCENARIO] Page comparison statistics. Scenario: %s, step: %d. " +
+                        "Total elements changed: %s, changed roles: %s."
+                                .formatted(
+                                        scenarioId,
+                                        currentStepNumber,
+                                        elementsCountChanged,
+                                        changedElementsCountByRoles
+                                )
+        );
+
+
         if(elementsCountChanged || !changedElementsCountByRoles.isEmpty()) {
+            publishEvent(
+                    null,
+                    "[SCENARIO] Page changes detected. Generating intermediate scenario step. " +
+                            "Scenario: %s, step: %d."
+                                    .formatted(scenarioId, currentStepNumber)
+            );
+
             ComparedPagesDto comparedPagesDto = this.compareAnalyzedPagesService.compare(
                     prevAnalyze,
                     newAnalyzedPage,
                     changedElementsCountByRoles
             );
+
+            publishEvent(
+                    null,
+                    "[SCENARIO] Page comparison completed. Scenario: %s, step: %d."
+                            .formatted(scenarioId, currentStepNumber)
+            );
+
 
             publishEvent(new MonkeyTestActionDto(
                     "INFO [SCENARIO] DECIDED NEW NEXT STEP id=%s steps=%d"
@@ -326,6 +359,12 @@ public class RunMonkeyTestService {
                     scenarioId,
                     currentStepNumber
             ));
+
+            publishEvent(
+                    null,
+                    "[SCENARIO] Intermediate step generated successfully. Scenario: %s, step: %d."
+                            .formatted(scenarioId, currentStepNumber)
+            );
 
             return Optional.of(new DecidedScenarioDto(
                     newAnalyzedPage,
@@ -380,6 +419,16 @@ public class RunMonkeyTestService {
                         RunMonkeyTestService.class,
                         monkeyTestActionDto,
                         monkeyTestActionDto.message()
+                )
+        );
+    }
+
+    private <T> void publishEvent(T data, String message) {
+        eventDispatcher.publish(
+                new SystemEventDto<>(
+                        RunMonkeyTestService.class,
+                        data,
+                        message
                 )
         );
     }

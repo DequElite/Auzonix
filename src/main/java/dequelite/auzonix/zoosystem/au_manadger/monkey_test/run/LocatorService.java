@@ -75,9 +75,12 @@ public class LocatorService {
             selectors.add("[id='%s']".formatted(attributes.id()));
         }
 
-        if (attributes.className() != null && !attributes.className().isEmpty()) {
-            selectors.add("[class='%s']".formatted(attributes.className()));
-        }
+        // WARN: отключил временно
+        // WARN: причина: ошибки в поиске елементов из за этого селектора
+        // WARN: РЕШИТЬ ОСТАВЛЯТЬ ИЛИ УДАЛЯТЬ. ЗАПИСАТЬ В ПЛАН
+//        if (attributes.className() != null && !attributes.className().isEmpty()) {
+//            selectors.add("[class='%s']".formatted(attributes.className()));
+//        }
 
         if (attributes.placeholder() != null && !attributes.placeholder().isEmpty()) {
             selectors.add("[placeholder='%s']".formatted(attributes.placeholder()));
