@@ -36,8 +36,8 @@ Auzonix is an actively developed experimental project that has only recently sta
 For more information about current restrictions and known issues, see  [**System Limitations**](./docs/SystemLimitations.md)
 ## Versioning
 Auzonix uses a custom versioning system combined with Semantic Versioning (SemVer).
-See the [VERSIONING](Versioning) file for details.
-To see the current system version see the [VERSIONING](Versioning) file also.
+See the [VERSIONING](./docs/Versioning.md) file for details.
+To see the current system version see the [VERSIONING](./docs/Versioning.md) file also.
 ## License
 Auzonix is licensed under the Apache License 2.0.
 See the [LICENSE](./LICENSE) file for details.
