@@ -4,7 +4,7 @@ Welcome to Auzonix repository! Here you can explore  new experimental system, an
 ## Why Auzonix?
 **Auzonix** does not try to use your site as intended, instead it creates Artificial Users that try to behave like real users, simulating different levels of understanding: from someone who sees the site for the first time, to a person who does everything not the way it should be. You no longer have to write everything yourself - you can watch how real users could interact with your site in production, without making your website publicly available. Moreover, this approach makes it possible to spot logical bugs or inconsistencies on your site, before they reach actual users.
 ## How does it work?
-**For now, the system is in the alpha stage (experimental) and has just started its journey, so it does not have many features yet, but we are actively developing it. See** [**System Limitations**](SystemLimitations)**.**
+**For now, the system is in the alpha stage (experimental) and has just started its journey, so it does not have many features yet, but we are actively developing it. See [**System Limitations**](./docs/SystemLimitations.md)**
 
 First of all, Auzonix explores your app idea, tasks, and purpose to understand how real users could interact with your web app in different ways.
 
