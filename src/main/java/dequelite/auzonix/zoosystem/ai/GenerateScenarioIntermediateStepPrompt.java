@@ -5,6 +5,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.PageElementDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChSIntermediateStepDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
+import dequelite.auzonix.zoosystem.scenario_manadger.dto.RawChSIntermediateStepDto;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.service.spring.AiService;
@@ -72,30 +73,21 @@ public interface GenerateScenarioIntermediateStepPrompt {
              COMPLETION RULES
             {{completionRule}}
             
-             REQUIRED OUTPUT JSON STRUCTURE
-            {
-            "cutScenario": false,
-            "step": {
-            "stepNumber": 1,
-            "purpose": "string (why the user performs this action, reflecting the current situation and profile behavior)",
-            "action": "CLICK | FILL | CHECK | UNCHECK | SELECTOPTION",
-            "targetElement": {
-            "id": "EL_NUMERICAL_ID",
-            "role": "BUTTON | LINK | TEXTBOX | HEADING | PARAGRAPH | CHECKBOX | RADIO | SWITCH | COMBOBOX | OPTION | SPINBUTTON",
-            "attributes": {
-            "content": "string",
-            "ariaLabel": "string",
-            "name": "string",
-            "id": "string",
-            "className": "string",
-            "placeholder": "string"
-            }
-            },
-            "fillValue": "string | null"
-            }
-            }
+            REQUIRED OUTPUT JSON STRUCTURE
+             { 
+             "cutScenario": false,
+             "step":{
+                   "stepNumber": 1,
+                   "purpose": "string (why the user performs this action, explaining any profile-driven mistake or decision)",
+                   "action":"CLICK" | "FILL" | "CHECK" | "UNCHECK" | "SELECTOPTION",
+                   "targetElement": {
+                     "id": "string (matching page element ID)",
+                   },
+                   "fillValue": "string" | null
+                 }
+             }
             """)
-    ChSIntermediateStepDto generate(
+    RawChSIntermediateStepDto generate(
             @V("appIdeaAnalysisJson") AnalyzedAppIdeaDto appIdeaAnalysisJson,
             @V("prevAnalyzeJson") AnalyzedAppPageDto prevAnalyzedPage,
 

@@ -5,23 +5,22 @@ import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedPagesDt
 import dequelite.auzonix.zoosystem.app_analyzer.ai_analyzers.dto.AnalyzedTasksDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
+import dequelite.auzonix.zoosystem.app_analyzer.dto.PageElementDto;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.FirstAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.SecondAuLevelType;
 import dequelite.auzonix.zoosystem.au_manadger.au_types.dto.AuTypeDto;
 import dequelite.auzonix.zoosystem.event.disparcher.EventDispatcher;
 import dequelite.auzonix.zoosystem.event.dto.SystemEventDto;
-import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
+import dequelite.auzonix.zoosystem.scenario_manadger.dto.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -93,12 +92,7 @@ public class GenerateChaosScenarioService {
             AnalyzedTasksDto appTasksAnalysis,
             AuTypeDto auType
     ) {
-//        AnalyzedAppPageDto mainAnalyzedPage = a.pages().isEmpty()
-//                ? null
-//                : analyzedPagesDocuments.pages().getFirst();
-//        if(mainAnalyzedPage == null) throw new RuntimeException("analyzedPagesDocuments is null on GenerateChaosScenarioService - generate");
-
-        ChaosScenarioDto scenario = this.generateChaosScenarioPrompt.analyze(
+        RawChSDto rawScenario = this.generateChaosScenarioPrompt.analyze(
                 appIdeaAnalysis,
                 appTasksAnalysis.tasks(),
                 analyzedPage,
@@ -110,13 +104,37 @@ public class GenerateChaosScenarioService {
                 auType.completionRule()
         );
 
+        Map<String, PageElementDto> pageElements = analyzedPage.elements().stream()
+                .collect(Collectors.toMap(
+                        PageElementDto::id,
+                        Function.identity()
+                ));
+
+        List<ChSStepDto> chsSteps = rawScenario.steps().stream()
+                .map(rawChSS -> {
+                    PageElementDto foundEl = pageElements.get(rawChSS.targetElement().id());
+
+                    return new ChSStepDto(
+                            rawChSS.stepNumber(),
+                            rawChSS.purpose(),
+                            rawChSS.action(),
+                            rawChSS.fillValue(),
+                            new ChSTargetElementDto(
+                                    rawChSS.targetElement().id(),
+                                    foundEl.role(),
+                                    foundEl.attributes()
+                            )
+                    );
+                })
+                .toList();
+
         return new ChaosScenarioDto(
                 UUID.randomUUID(),
-                scenario.name(),
-                scenario.goal(),
-                scenario.auType(),
-                scenario.targetUrl(),
-                scenario.steps()
+                rawScenario.name(),
+                rawScenario.goal(),
+                rawScenario.auType(),
+                rawScenario.targetUrl(),
+                chsSteps
         );
     }
 }

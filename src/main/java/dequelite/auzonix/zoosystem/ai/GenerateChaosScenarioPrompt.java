@@ -4,6 +4,7 @@ import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppIdeaDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppPageDto;
 import dequelite.auzonix.zoosystem.app_analyzer.dto.AnalyzedAppTaskDto;
 import dequelite.auzonix.zoosystem.scenario_manadger.dto.ChaosScenarioDto;
+import dequelite.auzonix.zoosystem.scenario_manadger.dto.RawChSDto;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import dev.langchain4j.service.spring.AiService;
@@ -75,20 +76,13 @@ public interface GenerateChaosScenarioPrompt {
                     "action":"CLICK" | "FILL" | "CHECK" | "UNCHECK" | "SELECTOPTION",
                     "targetElement": {
                       "id": "string (matching page element ID)",
-                      "role": "BUTTON" | "LINK" | "TEXTBOX" | "HEADING" | "PARAGRAPH" | "CHECKBOX" | "RADIO" | "SWITCH" | "COMBOBOX" | "OPTION",
-                      "attributes": {
-              			"content": "string",
-              			"id": "string",
-              			"class": "string",
-              			"placeholder": "string"
-              		}
                     },
                     "fillValue": "string" | null
                   }
                 ]
               }
            """)
-    ChaosScenarioDto analyze(
+    RawChSDto analyze(
             @V("appIdeaAnalysisJson") AnalyzedAppIdeaDto appIdeaAnalysisJson,
             @V("appTasksAnalysisJson") List<AnalyzedAppTaskDto> appTasksAnalysisJson,
             @V("pageAnalysisJson") AnalyzedAppPageDto pageAnalysisJson,
