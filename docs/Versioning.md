@@ -23,9 +23,9 @@ Identifies a specific update within a public release.
 This system separates public release tracking from internal update tracking while preserving a recognizable versioning structure.
 
 # Current Version
-**`0.2-26m11v6.b`**
+**`0.2-26m11v7.ft`**
 - `0.2` — current experimental public release (MVP 2.0).
-- `26m11v6.b` — sixth major update of November 2026.
+- `26m11v7.ft` — seventh feature update of November 2026.
 
 **Release Status:** Experimental / Alpha
 

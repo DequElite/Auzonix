@@ -1,4 +1,8 @@
-Welcome to Auzonix repository! Here you can explore  new experimental system, and help itgrow.
+Welcome to Auzonix repository! Here you can explore  new experimental system, and help it grow.
+
+### ==***26m11v7.ft is now here***==
+See the [CHANGELOG](./CHANGELOG.md) file for details.
+
 ## What is Auzonix?
 **Auzonix** - its not just a new AI-agent, its an autonomous testing system that manages Artificial Users which have their own presonality, interact with your website chaotically and trying to imitate real-user behaivor by using AI-powered solutions. System allows Artificial Users to break your web app or round  use it as intended, without using any E2E tests or predefined scenarios that can be perfect and couldnt reveal real bugs.
 ## Why Auzonix?
